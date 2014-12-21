@@ -35,7 +35,7 @@ func main() {
 
 	//Setup the globals
 	flag.Parse()
-	rand.Seed(time.Now())
+	rand.Seed(time.Now().UnixNano())
 
 	var nodesserver NodesServer
 	var resserver ResServer
@@ -53,6 +53,8 @@ func main() {
 
 	http.HandleFunc("/servetree", DoLogging(nodesserver.ServeTree))
 	http.HandleFunc("/servenode", DoLogging(nodesserver.ServeNode))
+	http.HandleFunc("/startnode", DoLogging(nodesserver.StartNode))
+
 	//Start the service
 	log.Printf("Serving on %s\n", config.HTTP)
 	log.Fatal(http.ListenAndServe(config.HTTP, nil))

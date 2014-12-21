@@ -30,9 +30,7 @@ func NewTestServer() *TestServer {
 
 var testtypes = []string{"audio", "image", "text", "directory"}
 
-const lorem = `Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin euismod metus sollicitudin turpis cursus mattis eget et eros. In hac habitasse platea dictumst. Donec et orci dolor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus accumsan felis non eros aliquam sollicitudin. Nulla dolor augue, suscipit nec tortor efficitur, pretium aliquet turpis. Vestibulum egestas consequat massa ac semper. Duis auctor nisi in aliquam viverra. Quisque at malesuada ligula, vel tempor nunc. Aenean placerat dui quis eros congue eleifend. Donec convallis nisi at risus convallis molestie. Duis eu turpis sed nibh iaculis posuere. Duis dapibus velit ultrices vestibulum volutpat. Fusce eget nisl eget diam aliquam blandit non quis libero.
-
-Etiam ultrices ex orci, eget dictum metus blandit a. Suspendisse finibus orci at molestie mollis. Quisque vitae libero at diam accumsan lacinia eu ac neque. Vestibulum maximus justo ut nulla bibendum, vel lobortis tellus porttitor. Ut consectetur facilisis pretium. Maecenas sodales neque vitae pellentesque convallis. Praesent placerat erat orci, sit amet consectetur felis eleifend id. Donec pretium, ex eu porta consequat, nisl felis tempor nibh, nec congue tortor leo et sapien. Ut id urna sit amet orci ultrices sollicitudin eget egestas neque. Aliquam malesuada eu augue ac ultricies. In maximus mattis elementum. Cras quis varius turpis, eu porttitor quam. Nulla id turpis porta, luctus velit vehicula, suscipit lectus. Ut eget ex eu risus accumsan faucibus.`
+const lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin euismod metus sollicitudin turpis cursus mattis eget et eros. In hac habitasse platea dictumst. Donec et orci dolor. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus accumsan felis non eros aliquam sollicitudin. Nulla dolor augue, suscipit nec tortor efficitur, pretium aliquet turpis. Vestibulum egestas consequat massa ac semper. Duis auctor nisi in aliquam viverra. Quisque at malesuada ligula, vel tempor nunc. Aenean placerat dui quis eros congue eleifend. Donec convallis nisi at risus convallis molestie. Duis eu turpis sed nibh iaculis posuere. Duis dapibus velit ultrices vestibulum volutpat. Fusce eget nisl eget diam aliquam blandit non quis libero.\n\nEtiam ultrices ex orci, eget dictum metus blandit a. Suspendisse finibus orci at molestie mollis. Quisque vitae libero at diam accumsan lacinia eu ac neque. Vestibulum maximus justo ut nulla bibendum, vel lobortis tellus porttitor. Ut consectetur facilisis pretium. Maecenas sodales neque vitae pellentesque convallis. Praesent placerat erat orci, sit amet consectetur felis eleifend id. Donec pretium, ex eu porta consequat, nisl felis tempor nibh, nec congue tortor leo et sapien. Ut id urna sit amet orci ultrices sollicitudin eget egestas neque. Aliquam malesuada eu augue ac ultricies. In maximus mattis elementum. Cras quis varius turpis, eu porttitor quam. Nulla id turpis porta, luctus velit vehicula, suscipit lectus. Ut eget ex eu risus accumsan faucibus."
 const MAX_NODES int = 10
 const MAX_COMMENTS int = 3
 
@@ -93,6 +91,31 @@ func (t *TestServer) ServeTree(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Error in TestServer.ServeTree():%s", err)
 	}
+}
+
+func (t *TestServer) StartNode(w http.ResponseWriter, r *http.Request) {
+	id := r.FormValue("id")
+	log.Printf("TestServer.StartNode: Node Start Requested - %s", id)
+	t.NLock.RLock()
+	defer t.NLock.RUnlock()
+
+	val, ok := t.Nodes[id]
+	if !ok {
+		http.Error(w, "Couldn't locate requested item", http.StatusBadRequest)
+		log.Printf("TestServer.StartNode: Couldn't locate node %s", id)
+		return
+	}
+
+	success := rand.Intn(5) //each program has 1 in 5 chances of successful start, 0 = failure
+
+	if success == 0 { //failure
+		http.Error(w, "Error Starting requested item", http.StatusInternalServerError)
+		log.Printf("TestServer.StartNode: Couldn't start node %s", val.Name)
+		return
+	}
+	log.Printf("TestServer.StartNode: Node %s %s successfully started", val.Id, val.Name)
+	return //return success
+
 }
 
 func (t *TestServer) ServeNode(w http.ResponseWriter, r *http.Request) {

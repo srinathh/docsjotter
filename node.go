@@ -17,6 +17,7 @@ type JSTreeNode struct {
 
 //type NodeData represents the data structure served to the client in response to /servenode?id=?
 //it is be optionally used by the storage mechanism also (eg. in test backend)
+//Comment.Text gets parsed by blackfriday markdown parser before being served
 type Node struct {
 	Id       string
 	Parent   string
@@ -33,9 +34,10 @@ type Comment struct {
 	ModTime string
 }
 
-func (n *Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (n Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var buf bytes.Buffer
+
 	if err := json.NewEncoder(&buf).Encode(n); err != nil {
 		http.Error(w, "Could not fetch the node", http.StatusInternalServerError)
 		log.Printf("Node.ServeHTTP: Error in encoding node %s to ResponseWriter : %s", n.Name, err)

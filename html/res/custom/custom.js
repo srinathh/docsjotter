@@ -1,3 +1,4 @@
+//Initialize the JSTree
 $(function(){
     $("#foldertree").jstree({
         "core" : {
@@ -7,7 +8,7 @@ $(function(){
             },
             multiple:false
         },
-        "plugins":["wholerow","types"], //"types"
+        "plugins":["wholerow","types","sort"], //"types"
         "types": {              
             "audio":{"icon":"fa fa-file-audio-o"},
             "vnd.ms-excel":{"icon":"fa fa-file-excel-o"},
@@ -22,15 +23,21 @@ $(function(){
             "msword":{"icon":"fa fa-file-word-o"},
             "zip":{"icon":"fa fa-file-archive-o"}
         }
-        //"types": {"Archive":{"icon":"fa fa-file-archive-o"},"Audio File":{"icon":"fa fa-file-audio-o"},"Excel Spreadsheet":{"icon":"fa fa-file-excel-o"},"File":{"icon":"fa fa-file-o"},"Folder":{"icon":"fa fa-folder-open-o"},"HTML File":{"icon":"fa fa-html5"},"Image File":{"icon":"fa fa-file-image-o"},"Markdown Document":{"icon":"fa fa-file-text-o"},"PDF File":{"icon":"fa fa-file-pdf-o"},"Powerpoint Presentation":{"icon":"fa fa-file-powerpoint-o"},"Programming Code":{"icon":"fa fa-file-code-o"},"Text File":{"icon":"fa fa-file-text-o"},"Video File":{"icon":"fa fa-file-video-o"},"Word Document":{"icon":"fa fa-file-word-o"}}
     });
 });
 
+//Make JSTree automatically select the first node after it is ready
 $(function(){
     $('#foldertree').on("ready.jstree", function(){
-        $('#foldertree').jstree("select_node","0")
+        $('#foldertree').jstree("select_node","ul > li:first")
     });
 });
+
+
+var servenode = function(id){
+    
+}
+
 
 $(function(){
     $('#foldertree').on("select_node.jstree", function(e, data){
@@ -41,16 +48,36 @@ $(function(){
                 "id":data.node.id
             },
             success:function(nodedata){
-                $("#NodeName").html('<button data.id="'+nodedata.Id+'" class="btn btn-default" role="button"><span class="glyphicon glyphicon-open" /></button>&nbsp;'+nodedata.Name);
                 $("#NodeType").text(nodedata.Type);
                 $("#NodeSize").text(nodedata.Size);
                 $("#NodeModTime").text(nodedata.ModTime);
-                $("#Comments").children().remove();
-                //tk add handler for the button
 
+                $("#NodeName").html('<button id="openbutton" data-id="'+nodedata.Id+'" class="btn btn-default" role="button"><span class="glyphicon glyphicon-open" /></button>&nbsp;'+nodedata.Name);
+                $("#openbutton").click(function(){
+                    $.ajax({
+                        url:"/startnode",
+                        data:{
+                            "id":$("#openbutton").data("id")
+                        },
+                        error: function( xhr, status, errorThrown ) {
+                            alert( "Sorry, there was a problem!" );
+                            console.log( "Error: " + errorThrown );
+                            console.log( "Status: " + status );
+                            console.dir( xhr );
+                        }
+                    });
+                });
+
+                $("#Comments").children().remove();
                 for (var i = 0; i < nodedata.Comments.length; i++){
-                    $("#Comments").append('<article class="panel"><header><div class="panel-heading">Updated '+nodedata.Comments[i].ModTime+'<a data.id="'+nodedata.Comments[i].Id+'" href="#"><span style="color:white;" class="glyphicon glyphicon-pencil pull-right"></span></a></div></header><div class="panel-body">'+nodedata.Comments[i].Text+'</div></article>');
-                    //tk add handler for the edit icon
+                    $("#Comments").append('<article class="panel"><header><div class="panel-heading">Updated '+nodedata.Comments[i].ModTime+'<a id="cedit'+i.toString()+'" data-id="'+nodedata.Comments[i].Id+'" data-text="'+ nodedata.Comments[i].Text+'" href="#"><span style="color:white;" class="glyphicon glyphicon-pencil pull-right"></span></a></div></header><div class="panel-body">'+marked(nodedata.Comments[i].Text)+'</div></article>');
+                    
+                    $("#cedit"+i.toString()).click(function(evt){
+                        //alert($(this).data("text"));
+                        $('#commenttextarea').text($(this).data("text"))
+                        $('#commenteditor').modal()
+                        evt.preventDefault();
+                    });
                 } 
 
 
@@ -60,7 +87,7 @@ $(function(){
                 console.log( "Error: " + errorThrown );
                 console.log( "Status: " + status );
                 console.dir( xhr );
-            },
+            }
         })
     })
 })
