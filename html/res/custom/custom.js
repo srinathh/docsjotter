@@ -34,63 +34,108 @@ $(function(){
 });
 
 
-var servenode = function(id){
+var shownode = function(nodedata){
+    $("#NodeType").text(nodedata.Type);
+    $("#NodeSize").text(nodedata.Size);
+    $("#NodeModTime").text(nodedata.ModTime);
+
+    $("#NodeName").html('<button id="openbutton" data-id="'+nodedata.Id+'" class="btn btn-default" role="button"><span class="glyphicon glyphicon-open" /></button>&nbsp;'+nodedata.Name);
     
+    $("#openbutton").click(function(){
+        $.ajax({
+            url:"/startnode",
+            data:{
+                "id":$("#openbutton").data("id")
+            },
+            error: function( xhr, status, errorThrown ) {
+                alert( "Sorry, there was a problem!" + errorThrown + status );
+            }
+        });
+    });
+
+    $("#Comments").children().remove();
+    for (var i = 0; i < nodedata.Comments.length; i++){
+        $("#Comments").append('<article class="panel"><header><div class="panel-heading">'+nodedata.Comments[i].ModTime+'<a id="cedit'+i.toString()+'" data-nodeid="'+nodedata.Id+'" data-commentid="'+nodedata.Comments[i].Id+'" data-text="'+ nodedata.Comments[i].Text+'" href="#"><span style="color:white;" class="glyphicon glyphicon-pencil pull-right"></span></a></div></header><div class="panel-body">'+marked(nodedata.Comments[i].Text)+'</div></article>');
+                
+        $("#cedit"+i.toString()).click(function(evt){
+            $('#commenttextarea').val($(this).data("text"));
+            $('#commenttextarea').data("nodeid",$(this).data("nodeid"));
+            $('#commenttextarea').data("commentid",$(this).data("commentid"));
+            $('#commenteditor').modal();
+            evt.preventDefault();
+        });
+    } 
+};
+
+
+$(function(){
+    $('#saveeditor').click(function(event) {
+        $.ajax({
+            url:"/editcomment",
+            method:"POST",
+            data:{
+                "nodeid":$("#commenttextarea").data("nodeid"),
+                "commentid":$("#commenttextarea").data("commentid"),
+                "text":$("#commenttextarea").val()
+            },
+            success:function(){
+                //alert("updated");
+                $('#commenteditor').modal('hide');
+                updatenode($("#commenttextarea").data("nodeid"));
+
+            }
+        });
+    });
+});
+
+var updatenode = function(nodeid){
+
+        $.ajax({
+            url:"/servenode",
+            datatype:"json",
+            data:{
+                "id":nodeid
+            },
+            success:function(data){
+                shownode(data);
+            },
+            error: function( xhr, status, errorthrown ) {
+                alert( "sorry, there was a problem!" );
+                console.log( "error: " + errorthrown );
+                console.log( "status: " + status );
+                console.dir( xhr );
+            }
+
+        })
+
 }
 
 
 $(function(){
     $('#foldertree').on("select_node.jstree", function(e, data){
-        $.ajax({
+        updatenode(data.node.id);
+/*        $.ajax({
             url:"/servenode",
-            dataType:"json",
+            datatype:"json",
             data:{
                 "id":data.node.id
             },
-            success:function(nodedata){
-                $("#NodeType").text(nodedata.Type);
-                $("#NodeSize").text(nodedata.Size);
-                $("#NodeModTime").text(nodedata.ModTime);
-
-                $("#NodeName").html('<button id="openbutton" data-id="'+nodedata.Id+'" class="btn btn-default" role="button"><span class="glyphicon glyphicon-open" /></button>&nbsp;'+nodedata.Name);
-                $("#openbutton").click(function(){
-                    $.ajax({
-                        url:"/startnode",
-                        data:{
-                            "id":$("#openbutton").data("id")
-                        },
-                        error: function( xhr, status, errorThrown ) {
-                            alert( "Sorry, there was a problem!" );
-                            console.log( "Error: " + errorThrown );
-                            console.log( "Status: " + status );
-                            console.dir( xhr );
-                        }
-                    });
-                });
-
-                $("#Comments").children().remove();
-                for (var i = 0; i < nodedata.Comments.length; i++){
-                    $("#Comments").append('<article class="panel"><header><div class="panel-heading">Updated '+nodedata.Comments[i].ModTime+'<a id="cedit'+i.toString()+'" data-id="'+nodedata.Comments[i].Id+'" data-text="'+ nodedata.Comments[i].Text+'" href="#"><span style="color:white;" class="glyphicon glyphicon-pencil pull-right"></span></a></div></header><div class="panel-body">'+marked(nodedata.Comments[i].Text)+'</div></article>');
-                    
-                    $("#cedit"+i.toString()).click(function(evt){
-                        //alert($(this).data("text"));
-                        $('#commenttextarea').text($(this).data("text"))
-                        $('#commenteditor').modal()
-                        evt.preventDefault();
-                    });
-                } 
-
-
+            success:function(data){
+                shownode(data);
             },
-            error: function( xhr, status, errorThrown ) {
-                alert( "Sorry, there was a problem!" );
-                console.log( "Error: " + errorThrown );
-                console.log( "Status: " + status );
+            error: function( xhr, status, errorthrown ) {
+                alert( "sorry, there was a problem!" );
+                console.log( "error: " + errorthrown );
+                console.log( "status: " + status );
                 console.dir( xhr );
             }
+
         })
-    })
-})
+*/
+    });
+
+});
+
 
 /*
 $(function() {

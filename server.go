@@ -24,6 +24,7 @@ type NodesServer interface {
 	ServeTree(w http.ResponseWriter, r *http.Request)
 	ServeNode(w http.ResponseWriter, r *http.Request)
 	StartNode(w http.ResponseWriter, r *http.Request)
+	EditComment(w http.ResponseWriter, r *http.Request)
 }
 
 type ResServer interface {
@@ -54,6 +55,7 @@ func main() {
 	http.HandleFunc("/servetree", DoLogging(nodesserver.ServeTree))
 	http.HandleFunc("/servenode", DoLogging(nodesserver.ServeNode))
 	http.HandleFunc("/startnode", DoLogging(nodesserver.StartNode))
+	http.HandleFunc("/editcomment", DoLogging(nodesserver.EditComment))
 
 	//Start the service
 	log.Printf("Serving on %s\n", config.HTTP)

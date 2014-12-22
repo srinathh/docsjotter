@@ -1,7 +1,9 @@
 package main
 
 import (
+	"encoding/hex"
 	"encoding/json"
+	"hash/fnv"
 	"log"
 	"math/rand"
 	"net/http"
@@ -24,7 +26,7 @@ func NewTestServer() *TestServer {
 	t.HTMLPath = "html"
 	t.TestDataPath = "testdata"
 	t.Nodes = make(map[string]Node)
-	t.GenTest(5, 0, 0, "#")
+	t.GenTest(5, "#")
 	return &t
 }
 
@@ -34,15 +36,26 @@ const lorem = "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin eu
 const MAX_NODES int = 10
 const MAX_COMMENTS int = 3
 
+func DoHash(s string) string {
+	hasher := fnv.New64a()
+	hasher.Write([]byte(s))
+	return hex.EncodeToString(hasher.Sum(nil))
+}
+
 //GenTest recursively generates a structure of Nodes with comments to serve on the client test server
-func (t *TestServer) GenTest(depth, nodeid, commentid int, parentid string) (int, int) {
+func (t *TestServer) GenTest(depth int, parentid string) {
 
 	numnodes := rand.Intn(MAX_NODES)
-	for j := 0; j < numnodes; j++ {
+	for j := 0; j < numnodes+1; j++ { // to prevent edge case of 0 nodes in any folder
 		var n Node
 
-		n.Id = strconv.FormatInt(int64(nodeid), 10)
-		nodeid++
+		for {
+			wrkid := strconv.FormatInt(int64(rand.Uint32()), 10)
+			if _, ok := t.Nodes[wrkid]; !ok { //no clash with anything existing - unique ids
+				n.Id = wrkid
+				break
+			}
+		}
 
 		if depth > 0 {
 			n.Type = testtypes[rand.Intn(len(testtypes))]
@@ -56,19 +69,21 @@ func (t *TestServer) GenTest(depth, nodeid, commentid int, parentid string) (int
 		n.Size = n.Id + " kB"
 
 		numcomments := rand.Intn(MAX_COMMENTS)
-		n.Comments = make([]Comment, numcomments)
-		for i := 0; i < numcomments; i++ {
-			c := Comment{"C" + strconv.FormatInt(int64(commentid), 10), lorem[:rand.Intn(len(lorem))], time.Now().Format("Jan 2, 2006 at 3:04pm")}
-			commentid++
+		n.Comments = make([]Comment, numcomments+1)
+
+		n.Comments[0] = Comment{"CREATE", "Create a new comment...", "&nbsp;"}
+
+		for i := 1; i <= numcomments; i++ {
+			c := Comment{strconv.FormatInt(time.Now().UnixNano(), 10), lorem[:rand.Intn(len(lorem))], "Last Updated: " + time.Now().Format("Jan 2, 2006 at 3:04pm")}
 			n.Comments[i] = c
 		}
 
 		t.Nodes[n.Id] = n
 		if n.Type == "directory" {
-			nodeid, commentid = t.GenTest(depth-1, nodeid, commentid, n.Id)
+			t.GenTest(depth-1, n.Id)
 		}
 	}
-	return nodeid, commentid
+
 }
 
 func (t *TestServer) ServeTree(w http.ResponseWriter, r *http.Request) {
@@ -132,6 +147,24 @@ func (t *TestServer) ServeNode(w http.ResponseWriter, r *http.Request) {
 		log.Printf("TestServer.ServeNode: Couldn't locate node %s", id)
 	}
 	t.NLock.RUnlock()
+}
+
+func (t *TestServer) EditComment(w http.ResponseWriter, r *http.Request) {
+	nodeid := r.FormValue("nodeid")
+	commentid := r.FormValue("commentid")
+	newtext := r.FormValue("text")
+
+	log.Printf("EditComment %s, %s\n%s", nodeid, commentid, newtext)
+
+	t.NLock.Lock()
+	defer t.NLock.Unlock()
+	_, ok := t.Nodes[nodeid]
+	if !ok {
+		http.Error(w, "Could not locate requested item", http.StatusBadRequest)
+		log.Printf("EditComment: Couldn't locate node %s", nodeid)
+		return
+	}
+
 }
 
 func (t *TestServer) ServeRes(w http.ResponseWriter, r *http.Request) {
