@@ -9,7 +9,7 @@ import (
 )
 
 type StaticServer struct {
-	Root string
+	root string
 }
 
 func NewStaticServer(path string) (StaticServer, error) {
@@ -24,9 +24,9 @@ func (fs StaticServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var reqpath string
 	if r.URL.Path == "/" {
-		reqpath = filepath.Join(fs.Root, "index.html")
+		reqpath = filepath.Join(fs.root, "index.html")
 	} else {
-		reqpath = filepath.Join(fs.Root, r.URL.Path)
+		reqpath = filepath.Join(fs.root, r.URL.Path)
 	}
 
 	fi, err := os.Lstat(reqpath)

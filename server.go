@@ -3,52 +3,65 @@ package main
 import (
 	"github.com/justinas/alice"
 	"log"
-	"math/rand"
 	"net/http"
-	"time"
 )
 
-type NodesServer interface {
-	ServeTree(w http.ResponseWriter, r *http.Request)
-	ServeNode(w http.ResponseWriter, r *http.Request)
-	StartNode(w http.ResponseWriter, r *http.Request)
-	EditComment(w http.ResponseWriter, r *http.Request)
+//struct FrontEnd stores references to different http.HandlerFunc that will be bound to routes
+//by the PowerDocs server. This enables easy swapping of FrontEnd handlers in a piecemeal
+//fashion for testing and development. PowerDocs uses github.com/justinas/alice to chain middleware
+type FrontEnd struct {
+	ServeStatic http.HandlerFunc
+	ServeTree   http.HandlerFunc
+	ServeNode   http.HandlerFunc
+	StartNode   http.HandlerFunc
+	EditComment http.HandlerFunc
+	MiddleWare  alice.Chain
 }
 
-var nodesserver NodesServer
-var staticserver http.Handler
-var ipport string
-var middleware alice.Chain
+type Config struct {
+	IpPort string
+}
+
+var config Config
+var frontend FrontEnd
 
 func init() {
-	var err error
-	ipport = "127.0.0.1:8989"
+	frontend.MiddleWare = alice.New(LogHandler)
 
-	middleware = alice.New(LogHandler)
-	nodesserver = NewTestServer()
-
-	staticserver, err = NewStaticServer("html")
-	if err != nil {
+	if staticserver, err := NewStaticServer("html"); err != nil {
 		log.Fatalf("Error configuring static server : %s", err)
+	} else {
+		frontend.ServeStatic = staticserver.ServeHTTP
 	}
+
+	t := NewTestServer()
+	backend := NewFakeBackend()
+	f := NewFrontEndServer(backend)
+	frontend.ServeTree = f.ServeTree
+	frontend.ServeNode = f.ServeNode
+	frontend.StartNode = f.StartNode
+	//	frontend.ServeTree = t.ServeTree
+	//	frontend.ServeNode = t.ServeNode
+	//	frontend.StartNode = t.StartNode
+
+	frontend.EditComment = t.EditComment
+
+	config.IpPort = "127.0.0.1:8989"
 }
 
 func main() {
 
-	rand.Seed(time.Now().UnixNano())
-
 	//Setting up te resource Handlers
 	//http.Handle("/res/", staticserver)
-	http.Handle("/", middleware.Then(staticserver))
-
-	http.Handle("/servetree", middleware.ThenFunc(nodesserver.ServeTree))
-	http.Handle("/servenode", middleware.ThenFunc(nodesserver.ServeNode))
-	http.Handle("/startnode", middleware.ThenFunc(nodesserver.StartNode))
-	http.Handle("/editcomment", middleware.ThenFunc(nodesserver.EditComment))
+	http.Handle("/", frontend.MiddleWare.ThenFunc(frontend.ServeStatic))
+	http.Handle("/servetree", frontend.MiddleWare.ThenFunc(frontend.ServeTree))
+	http.Handle("/servenode", frontend.MiddleWare.ThenFunc(frontend.ServeNode))
+	http.Handle("/startnode", frontend.MiddleWare.ThenFunc(frontend.StartNode))
+	http.Handle("/editcomment", frontend.MiddleWare.ThenFunc(frontend.EditComment))
 
 	//Start the service
-	log.Printf("Serving on %s\n", ipport)
-	log.Fatal(http.ListenAndServe(ipport, nil))
+	log.Printf("Serving on %s\n", config.IpPort)
+	log.Fatal(http.ListenAndServe(config.IpPort, nil))
 }
 
 func LogHandler(h http.Handler) http.Handler {

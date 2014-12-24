@@ -15,6 +15,15 @@ type JSTreeNode struct {
 	Type   string `json:"type"`
 }
 
+func NewJSTreeNode(n Node) JSTreeNode {
+	var j JSTreeNode
+	j.Id = n.Id
+	j.Parent = n.Parent
+	j.Text = n.Name
+	j.Type = n.Type
+	return j
+}
+
 //type NodeData represents the data structure served to the client in response to /servenode?id=?
 //it is be optionally used by the storage mechanism also (eg. in test backend)
 //Comment.Text gets parsed by blackfriday markdown parser before being served
@@ -51,5 +60,4 @@ func (n Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Node.ServeHTTP: Error in writing Node %s to ResponseWriter : %s", n.Name, err)
 	}
 
-	log.Printf("Node.ServeHTTP: Served node %s", n.Name)
 }

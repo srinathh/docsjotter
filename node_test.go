@@ -8,34 +8,15 @@ import (
 	"testing"
 )
 
-/*
-var resp = `{
-	"Id":"0",
-	"Name":"root",
-	"Type":"directory",
-	"ModTime":"2014-12-19 08:41:00",
-	"Size": "20 Mb",
-	"Comments":[
-		{
-			"Id":"X",
-			"Text":"abcdefghijklmnopqrstuvwxyz"
-		},
-		{
-			"Id":"X",
-			"Text":"1234567890"
-		}
-	]
-}`
-*/
-
-func TestNode(t *testing.T) {
+func TestServeHTTP(t *testing.T) {
 	n := Node{
 		Id:       "0",
 		Name:     "root",
 		Type:     "directory",
+		Parent:   "#",
 		ModTime:  "2014-12-19 08:41:00",
 		Size:     "20 Mb",
-		Comments: []Comment{Comment{"X", "abcdefghijklmnopqrstuvwxyz"}, Comment{"Y", "1234567890"}},
+		Comments: []Comment{Comment{"X", "abcdefghijklmnopqrstuvwxyz", "23 Dec 2014"}, Comment{"Y", "1234567890", "22 Dec 2014"}},
 	}
 	r, err := http.NewRequest("GET", "/getnode", nil)
 	if err != nil {
@@ -44,7 +25,6 @@ func TestNode(t *testing.T) {
 	w := httptest.NewRecorder()
 	n.ServeHTTP(w, r)
 
-	t.Logf("Response:\n%s", w.Body.String())
 	var n1 Node
 
 	dec := json.NewDecoder(w.Body)
@@ -57,7 +37,28 @@ func TestNode(t *testing.T) {
 	}
 }
 
-func TestTree(t *testing.T) {
-	tst := NewTestServer()
-	t.Log(tst.Nodes)
+func TestJSTree(t *testing.T) {
+	input := Node{
+		Id:       "0",
+		Name:     "root",
+		Parent:   "#",
+		Type:     "directory",
+		ModTime:  "2014-12-19 08:41:00",
+		Size:     "20 Mb",
+		Comments: []Comment{Comment{"X", "abcdefghijklmnopqrstuvwxyz", "23 Dec 2014"}, Comment{"Y", "1234567890", "22 Dec 2014"}},
+	}
+
+	want := JSTreeNode{
+		Id:     "0",
+		Parent: "#",
+		Text:   "root",
+		Type:   "directory",
+	}
+
+	got := NewJSTreeNode(input)
+
+	if !reflect.DeepEqual(want, got) {
+		t.Errorf("JSTreeNode not as expected:\nWant:\n%v\nGot:\n%v", want, got)
+	}
+
 }

@@ -13,6 +13,10 @@ import (
 	"time"
 )
 
+func init() {
+	rand.Seed(48583)
+}
+
 type TestServer struct {
 	HTMLPath     string
 	TestDataPath string
