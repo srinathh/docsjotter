@@ -46,46 +46,16 @@ func TestServeTree(t *testing.T) {
 	frontend.ServeTree(w, r)
 
 	dec := json.NewDecoder(w.Body)
-	got := []JSTreeNode{}
-	if err := dec.Decode(&got); err != nil {
+	gotslice := []JSTreeNode{}
+	if err := dec.Decode(&gotslice); err != nil {
 		t.Errorf("Error in decode %s", err)
 	}
 
-	want := []JSTreeNode{
-		JSTreeNode{
-			Id:     "0",
-			Text:   "root",
-			Parent: "#",
-			Type:   "directory",
-		},
-		JSTreeNode{
-			Id:     "1",
-			Text:   "child",
-			Parent: "0",
-			Type:   "audio",
-		},
-		JSTreeNode{
-			Id:     "2",
-			Text:   "kitten",
-			Parent: "0",
-			Type:   "video",
-		},
+	for _, got := range gotslice {
+		want := NewJSTreeNode(fakebackend.nodes[got.Id])
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("Mismatch in JSTreeNode want and got \n%s\n%s\n", want, got)
+		}
 	}
 
-	for _, item := range got {
-
-		found := false
-
-		for _, compare := range want {
-			if reflect.DeepEqual(compare, item) {
-				found = true
-				break
-			}
-		}
-
-		if !found {
-			t.Fatalf("Mismatch in want and got\n%s\n%s", want, got)
-		}
-
-	}
 }

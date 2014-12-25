@@ -10,6 +10,7 @@ type BackEnd interface {
 	ListNodeIDs() ([]string, error)
 	GetNode(id string) (Node, error)
 	StartNode(id string) error
+	EditComment(id string, c Comment) error //special ID of CREATE = create new comment
 }
 
 //FrontEndServer implements the NodeServer Interface for http request handling and defines a back end
@@ -22,6 +23,28 @@ func NewFrontEndServer(bk BackEnd) *FrontEndServer {
 	var ret FrontEndServer
 	ret.backend = bk
 	return &ret
+}
+
+func (s *FrontEndServer) EditComment(w http.ResponseWriter, r *http.Request) {
+	nodeid := r.FormValue("nodeid")
+	commentid := r.FormValue("commentid")
+	text := r.FormValue("text")
+
+	//log.Printf("NodeID: %s, Commentid: %s, text: %s", nodeid, commentid, text)
+
+	//return
+	c := Comment{
+		Id:      commentid,
+		Text:    text,
+		ModTime: "",
+	}
+
+	if err := s.backend.EditComment(nodeid, c); err != nil {
+		http.Error(w, "Could not edit comment", http.StatusBadRequest)
+		log.Printf("Error editing comment: %s : %s", nodeid, err)
+		return
+	}
+
 }
 
 func (s *FrontEndServer) StartNode(w http.ResponseWriter, r *http.Request) {

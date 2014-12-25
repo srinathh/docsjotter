@@ -30,6 +30,7 @@ $(function(){
 $(function(){
     $('#foldertree').on("ready.jstree", function(){
         $('#foldertree').jstree("select_node","ul > li:first")
+        $('#foldertree').jstree("open_node","ul > li:first")
     });
 });
 
@@ -54,6 +55,8 @@ var shownode = function(nodedata){
     });
 
     $("#Comments").children().remove();
+    nodedata.Comments.splice(0, 0, {Id:"CREATE",ModTime:"Click on the pencil to create a new comment...",Text:""});
+
     for (var i = 0; i < nodedata.Comments.length; i++){
         $("#Comments").append('<article class="panel"><header><div class="panel-heading">'+nodedata.Comments[i].ModTime+'<a id="cedit'+i.toString()+'" data-nodeid="'+nodedata.Id+'" data-commentid="'+nodedata.Comments[i].Id+'" data-text="'+ nodedata.Comments[i].Text+'" href="#"><span style="color:white;" class="glyphicon glyphicon-pencil pull-right"></span></a></div></header><div class="panel-body">'+marked(nodedata.Comments[i].Text)+'</div></article>');
                 
@@ -114,100 +117,11 @@ var updatenode = function(nodeid){
 $(function(){
     $('#foldertree').on("select_node.jstree", function(e, data){
         updatenode(data.node.id);
-/*        $.ajax({
-            url:"/servenode",
-            datatype:"json",
-            data:{
-                "id":data.node.id
-            },
-            success:function(data){
-                shownode(data);
-            },
-            error: function( xhr, status, errorthrown ) {
-                alert( "sorry, there was a problem!" );
-                console.log( "error: " + errorthrown );
-                console.log( "status: " + status );
-                console.dir( xhr );
-            }
 
-        })
-*/
     });
 
 });
 
-
-/*
-$(function() {
-    $("#foldertree").jstree({
-        "core" : {
-            "data" :{
-                "url":"/dirtree"
-            }
-        },
-        "plugins":["sort", "types", "wholerow"],
-        "types": {"Archive":{"icon":"fa fa-file-archive-o"},"Audio File":{"icon":"fa fa-file-audio-o"},"Excel Spreadsheet":{"icon":"fa fa-file-excel-o"},"File":{"icon":"fa fa-file-o"},"Folder":{"icon":"fa fa-folder-open-o"},"HTML File":{"icon":"fa fa-html5"},"Image File":{"icon":"fa fa-file-image-o"},"Markdown Document":{"icon":"fa fa-file-text-o"},"PDF File":{"icon":"fa fa-file-pdf-o"},"Powerpoint Presentation":{"icon":"fa fa-file-powerpoint-o"},"Programming Code":{"icon":"fa fa-file-code-o"},"Text File":{"icon":"fa fa-file-text-o"},"Video File":{"icon":"fa fa-file-video-o"},"Word Document":{"icon":"fa fa-file-word-o"}}
-    });
-
-    $('#foldertree').on("select_node.jstree", function (evt, data) {
-        $.ajax({
-            url: "/node",
-            data: { 
-                "id": data.node.id, 
-            },
-            cache: false,
-            type: "POST",
-            success: function(response) {
-                $("#contents").html(response)
-            },
-            error: function(xhr) {
-                alert(xhr)
-            }
-        });
-    });
-
-    //$('#refresh').click( function() { window.location = 'http://www.google.com'; });
-
-
+$('#refreshbutton').click(function() {
+    location.reload(true);
 });
-
-
-var OpenNode = function(id){
-     $.ajax({
-        url: "/startnode",
-        data: { 
-           "id": id, 
-        },
-        cache: false,
-        type: "POST",
-        error: function(xhr) {
-            alert(xhr)
-        }
-    });
-
-};
-
-var EditNode = function(id){
-
-    if(id=="MDCREATENEW"){
-        alert("not implemented")
-    }else{
-         $.ajax({
-            url: "/editmd",
-            data: { 
-               "id": id, 
-            },
-            cache: false,
-            type: "POST",
-            error: function(xhr) {
-                alert(xhr)
-            },
-            success: function(ret){
-                $('#EditModal').html(ret)
-                $('#EditModal').modal() 
-            }
-        });
-    }
-
-}
-*/

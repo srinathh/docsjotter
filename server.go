@@ -34,17 +34,12 @@ func init() {
 		frontend.ServeStatic = staticserver.ServeHTTP
 	}
 
-	t := NewTestServer()
 	backend := NewFakeBackend()
 	f := NewFrontEndServer(backend)
 	frontend.ServeTree = f.ServeTree
 	frontend.ServeNode = f.ServeNode
 	frontend.StartNode = f.StartNode
-	//	frontend.ServeTree = t.ServeTree
-	//	frontend.ServeNode = t.ServeNode
-	//	frontend.StartNode = t.StartNode
-
-	frontend.EditComment = t.EditComment
+	frontend.EditComment = f.EditComment
 
 	config.IpPort = "127.0.0.1:8989"
 }
