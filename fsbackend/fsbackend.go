@@ -50,7 +50,46 @@ func (f *FSBackend) StartNode(id string) error {
 }
 
 func (f *FSBackend) EditComment(id string, c structs.Comment) error {
-	log.Printf("Got a EditComment request for id :%s", id)
+
+	f.locker.RLock()
+	fsnode, exists := f.fsnodes[id]
+	if !exists {
+		return fmt.Errorf("FSBackend.EditComment: Error node id %s does not exist", id)
+	}
+	f.locker.RUnlock()
+
+	isdir := false
+	if fsnode.Type == utils.DIRECTORY {
+		isdir = true
+	}
+
+	comments := fetchcomments(fsnode.path, isdir)
+
+	c.ModTime = time.Now().Format(time.Stamp)
+
+	if c.Id == "CREATE" {
+		c.Id = utils.DoHash(fmt.Sprintf("%s%d", c.Text, time.Now().UnixNano()))
+		comments = append([]structs.Comment{c}, comments...)
+	} else {
+		for i, com := range comments {
+			if c.Id == com.Id {
+				comments[i] = c
+				break
+			}
+		}
+	}
+
+	commentpath, exists := getcommentpath(fsnode.path, isdir)
+
+	fil, err := os.Create(commentpath)
+	if err != nil {
+		return fmt.Errorf("Could not open comment file for writing : %s, %s", commentpath, err)
+	}
+	defer fil.Close()
+	if err := structs.WriteComments(comments, fil); err != nil {
+		return fmt.Errorf("Error encoding comments for file : %s, %s", commentpath, err)
+	}
+
 	return nil
 
 } //special ID of CREATE = create new comment
@@ -81,7 +120,7 @@ func (f *FSBackend) GetNode(id string) (structs.Node, error) {
 	}, nil
 }
 
-func fetchcomments(path string, isdir bool) []structs.Comment {
+func getcommentpath(path string, isdir bool) (string, bool) {
 	var commentpath string
 
 	if isdir {
@@ -92,7 +131,18 @@ func fetchcomments(path string, isdir bool) []structs.Comment {
 
 	fi, err := os.Lstat(commentpath)
 	if err != nil || fi.IsDir() {
-		log.Printf("Couldn't find comments file %s for node %s", commentpath, path)
+		return commentpath, false
+	} else {
+		return commentpath, true
+	}
+
+}
+
+func fetchcomments(path string, isdir bool) []structs.Comment {
+
+	commentpath, exists := getcommentpath(path, isdir)
+	if !exists {
+		log.Printf("Comments file doesn't exist for %s or error statting it", path)
 		return []structs.Comment{}
 	}
 
