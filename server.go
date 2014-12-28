@@ -2,44 +2,37 @@ package main
 
 import (
 	"github.com/justinas/alice"
+	"github.com/srinathh/powerdocs/frontend"
+	"github.com/srinathh/powerdocs/fsbackend"
+	//"github.com/srinathh/powerdocs/mockbackends"
+	"github.com/srinathh/powerdocs/structs"
 	"log"
 	"net/http"
 )
-
-//struct FrontEnd stores references to different http.HandlerFunc that will be bound to routes
-//by the PowerDocs server. This enables easy swapping of FrontEnd handlers in a piecemeal
-//fashion for testing and development. PowerDocs uses github.com/justinas/alice to chain middleware
-type FrontEnd struct {
-	ServeStatic http.HandlerFunc
-	ServeTree   http.HandlerFunc
-	ServeNode   http.HandlerFunc
-	StartNode   http.HandlerFunc
-	EditComment http.HandlerFunc
-	MiddleWare  alice.Chain
-}
 
 type Config struct {
 	IpPort string
 }
 
 var config Config
-var frontend FrontEnd
+var frontendserver structs.FrontEnd
 
 func init() {
-	frontend.MiddleWare = alice.New(LogHandler)
+	frontendserver.MiddleWare = alice.New(LogHandler)
 
 	if staticserver, err := NewStaticServer("html"); err != nil {
 		log.Fatalf("Error configuring static server : %s", err)
 	} else {
-		frontend.ServeStatic = staticserver.ServeHTTP
+		frontendserver.ServeStatic = staticserver.ServeHTTP
 	}
 
-	backend := NewFakeBackend()
-	f := NewFrontEndServer(backend)
-	frontend.ServeTree = f.ServeTree
-	frontend.ServeNode = f.ServeNode
-	frontend.StartNode = f.StartNode
-	frontend.EditComment = f.EditComment
+	//backend := mockbackends.NewFakeBackend()
+	backend := fsbackend.NewFSBackend([]string{"testdata"})
+	f := frontend.NewFrontEndServer(backend)
+	frontendserver.ServeTree = f.ServeTree
+	frontendserver.ServeNode = f.ServeNode
+	frontendserver.StartNode = f.StartNode
+	frontendserver.EditComment = f.EditComment
 
 	config.IpPort = "127.0.0.1:8989"
 }
@@ -48,11 +41,11 @@ func main() {
 
 	//Setting up te resource Handlers
 	//http.Handle("/res/", staticserver)
-	http.Handle("/", frontend.MiddleWare.ThenFunc(frontend.ServeStatic))
-	http.Handle("/servetree", frontend.MiddleWare.ThenFunc(frontend.ServeTree))
-	http.Handle("/servenode", frontend.MiddleWare.ThenFunc(frontend.ServeNode))
-	http.Handle("/startnode", frontend.MiddleWare.ThenFunc(frontend.StartNode))
-	http.Handle("/editcomment", frontend.MiddleWare.ThenFunc(frontend.EditComment))
+	http.Handle("/", frontendserver.MiddleWare.ThenFunc(frontendserver.ServeStatic))
+	http.Handle("/servetree", frontendserver.MiddleWare.ThenFunc(frontendserver.ServeTree))
+	http.Handle("/servenode", frontendserver.MiddleWare.ThenFunc(frontendserver.ServeNode))
+	http.Handle("/startnode", frontendserver.MiddleWare.ThenFunc(frontendserver.StartNode))
+	http.Handle("/editcomment", frontendserver.MiddleWare.ThenFunc(frontendserver.EditComment))
 
 	//Start the service
 	log.Printf("Serving on %s\n", config.IpPort)
