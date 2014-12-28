@@ -34,7 +34,6 @@ $(function(){
     });
 });
 
-
 var shownode = function(nodedata){
     $("#NodeType").text(nodedata.Type);
     $("#NodeSize").text(nodedata.Size);
@@ -120,6 +119,21 @@ $(function(){
 
     });
 
+});
+
+$(function(){
+    $('#foldertree').on('dblclick', '.jstree-node', function (e) {
+            $.ajax({
+                url:"/startnode",
+                data:{
+                    "id":this.id
+                },
+                error: function( xhr, status, errorThrown ) {
+                    alert( "Sorry, there was a problem!" + errorThrown + status );
+                }
+            });        
+        e.stopPropagation();
+     });
 });
 
 $('#refreshbutton').click(function() {

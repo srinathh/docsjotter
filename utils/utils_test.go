@@ -1,6 +1,7 @@
 package utils
 
 /*
+commenting out this test to prevent GoConvey opening the test file with every directory change
 import (
 	"testing"
 )
