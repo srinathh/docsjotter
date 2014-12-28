@@ -45,7 +45,17 @@ type BackEnd interface {
 */
 
 func (f *FSBackend) StartNode(id string) error {
-	log.Printf("Got a Startode request for id :%s", id)
+
+	f.locker.RLock()
+	fsnode, exists := f.fsnodes[id]
+	if !exists {
+		return fmt.Errorf("FSBackend.StartNode: Error node id %s does not exist", id)
+	}
+	f.locker.RUnlock()
+
+	if err := utils.Start(fsnode.path); err != nil {
+		return fmt.Errorf("FSBackend.Startnode: Error opening node %s:%s", fsnode.path, err)
+	}
 	return nil
 }
 
