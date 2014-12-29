@@ -1,8 +1,13 @@
 [
     {
+        "Id": "b78c7208bc33c93a",
+        "Text": "Issue Tracker\n===========\n\nLook and feel\n-------------------\n1. ~~Need to reduce height of textarea. With 20 lines and adding toolbar, it becomes way too big~~\n  - Reducing text area to 15 lines did not solve the problem. Try removing the modal header?\n  - Yes removing the header works\n2. WONTFIX ~~Any way to change text-area font to fixed pitch?~~\n3. Figure out the right timestamp\n4. Arrange comments by most recently edited comments first?\n\nFunctionality\n-----------------\n0. add a config option to specify folder to serve\n1. support for tagging and tag collection\n2. asynchronous directory parsing (useful for large parse trees)\n3. a way to delete comments\n4. basic file move/copy/delete operations.\n5. add support for ignoring hidden files",
+        "ModTime": "Dec 29 08:27:47"
+    },
+    {
         "Id": "ccefda88bb0cdf86",
-        "Text": "asfasdfasdfasfdasdfadfasdfaf",
-        "ModTime": "Dec 28 18:23:15"
+        "Text": "asfasdfasdfasfdasdfadfasdfaf\nChanging the comment now, let's see if the time updates",
+        "ModTime": "Dec 29 08:24:49"
     },
     {
         "Id": "aca367562f1d7fb8",
