@@ -11,33 +11,40 @@ import (
 )
 
 type Config struct {
-	IpPort string
+	IpPort     string
+	Roots      []string
+	HtmlFolder string
 }
 
 var config Config
-var frontendserver structs.FrontEnd
 
 func init() {
+	config.HtmlFolder = "html"
+	config.Roots = []string{"testdata"}
+	config.IpPort = "127.0.0.1:8989"
+}
+
+func main() {
+
+	var frontendserver structs.FrontEnd
 	frontendserver.MiddleWare = alice.New(LogHandler)
 
-	if staticserver, err := NewStaticServer("html"); err != nil {
+	if staticserver, err := NewStaticServer(config.HtmlFolder); err != nil {
 		log.Fatalf("Error configuring static server : %s", err)
 	} else {
 		frontendserver.ServeStatic = staticserver.ServeHTTP
 	}
 
 	//backend := mockbackends.NewFakeBackend()
-	backend := fsbackend.NewFSBackend([]string{"testdata"})
+	backend := fsbackend.NewFSBackend(config.Roots)
 	f := frontend.NewFrontEndServer(backend)
+
+	//we're doing this rather than just use an interface to enable components to be
+	//swapped out on the fly
 	frontendserver.ServeTree = f.ServeTree
 	frontendserver.ServeNode = f.ServeNode
 	frontendserver.StartNode = f.StartNode
 	frontendserver.EditComment = f.EditComment
-
-	config.IpPort = "127.0.0.1:8989"
-}
-
-func main() {
 
 	//Setting up te resource Handlers
 	//http.Handle("/res/", staticserver)
