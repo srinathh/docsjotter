@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/BurntSushi/toml"
 	"github.com/justinas/alice"
 	"github.com/srinathh/powerdocs/frontend"
 	"github.com/srinathh/powerdocs/fsbackend"
@@ -8,28 +9,36 @@ import (
 	"github.com/srinathh/powerdocs/structs"
 	"log"
 	"net/http"
+	"os"
 )
 
 type Config struct {
-	IpPort     string
-	Roots      []string
-	HtmlFolder string
+	Http   string   `toml:"http"`
+	Roots  []string `toml:"roots"`
+	Resdir string   `toml:"resdir"`
 }
 
 var config Config
 
-func init() {
-	config.HtmlFolder = "html"
-	config.Roots = []string{"testdata"}
-	config.IpPort = "127.0.0.1:8989"
+func SetupConfig() {
+	f, err := os.Open("config.toml")
+	if err != nil {
+		log.Fatalf("Unable to open config.toml : %s", err)
+	}
+
+	_, err = toml.DecodeReader(f, &config)
+	if err != nil {
+		log.Fatalf("Unable to read config.toml:%s", err)
+	}
+	//tk if some keys are not defined, replace them with default values
 }
 
 func main() {
-
+	SetupConfig()
 	var frontendserver structs.FrontEnd
 	frontendserver.MiddleWare = alice.New(LogHandler)
 
-	if staticserver, err := NewStaticServer(config.HtmlFolder); err != nil {
+	if staticserver, err := NewStaticServer(config.Resdir); err != nil {
 		log.Fatalf("Error configuring static server : %s", err)
 	} else {
 		frontendserver.ServeStatic = staticserver.ServeHTTP
@@ -55,8 +64,8 @@ func main() {
 	http.Handle("/editcomment", frontendserver.MiddleWare.ThenFunc(frontendserver.EditComment))
 
 	//Start the service
-	log.Printf("Serving on %s\n", config.IpPort)
-	log.Fatal(http.ListenAndServe(config.IpPort, nil))
+	log.Printf("Serving on %s\n", config.Http)
+	log.Fatal(http.ListenAndServe(config.Http, nil))
 }
 
 func LogHandler(h http.Handler) http.Handler {
