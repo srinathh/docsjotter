@@ -64,3 +64,7 @@ background: -moz-radial-gradient(top left, ellipse cover, rgba(105,155,200,1) 0%
 }
 
 .sidebar { padding-top: 20px; }
+
+textarea{
+	color:"black";
+}

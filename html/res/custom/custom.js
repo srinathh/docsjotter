@@ -26,6 +26,12 @@ $(function(){
     });
 });
 
+var editor;
+$(function(){
+    editor = new Editor();
+    editor.render();
+});
+
 //Make JSTree automatically select the first node after it is ready
 $(function(){
     $('#foldertree').on("ready.jstree", function(){
@@ -60,14 +66,20 @@ var shownode = function(nodedata){
         $("#Comments").append('<article class="panel"><header><div class="panel-heading">'+nodedata.Comments[i].ModTime+'<a id="cedit'+i.toString()+'" data-nodeid="'+nodedata.Id+'" data-commentid="'+nodedata.Comments[i].Id+'" data-text="'+ nodedata.Comments[i].Text+'" href="#"><span style="color:white;" class="glyphicon glyphicon-pencil pull-right"></span></a></div></header><div class="panel-body">'+marked(nodedata.Comments[i].Text)+'</div></article>');
                 
         $("#cedit"+i.toString()).click(function(evt){
-            $('#commenttextarea').val($(this).data("text"));
+            //$('#commenttextarea').text($(this).data("text"));
             $('#commenttextarea').data("nodeid",$(this).data("nodeid"));
             $('#commenttextarea').data("commentid",$(this).data("commentid"));
+            //editor.codemirror.setValue($(this).data("text"));
+            editor.codemirror.setValue($(this).data("text"));
             $('#commenteditor').modal();
             evt.preventDefault();
         });
     } 
 };
+
+$('#commenteditor').on('shown.bs.modal', function (e) {
+    editor.codemirror.refresh(); 
+});
 
 
 $(function(){
@@ -78,7 +90,8 @@ $(function(){
             data:{
                 "nodeid":$("#commenttextarea").data("nodeid"),
                 "commentid":$("#commenttextarea").data("commentid"),
-                "text":$("#commenttextarea").val()
+                //"text":$("#commenttextarea").val()
+                "text":editor.codemirror.getValue()
             },
             success:function(){
                 //alert("updated");
@@ -139,3 +152,4 @@ $(function(){
 $('#refreshbutton').click(function() {
     location.reload(true);
 });
+
