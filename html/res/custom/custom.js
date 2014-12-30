@@ -77,29 +77,44 @@ var shownode = function(nodedata){
     } 
 };
 
+var intervalid;
+
 $('#commenteditor').on('shown.bs.modal', function (e) {
     editor.codemirror.refresh(); 
+    intervalid = setInterval(function(){
+        dosave(false);
+    }, 2500);
 });
+
+$('#commenteditor').on('hidden.bs.modal', function (e) {
+    clearInterval(intervalid);
+    updatenode($("#commenttextarea").data("nodeid"));
+});
+
+
+var dosave = function(dohide){
+   $.ajax({
+        url:"/editcomment",
+        method:"POST",
+        data:{
+            "nodeid":$("#commenttextarea").data("nodeid"),
+            "commentid":$("#commenttextarea").data("commentid"),
+            //"text":$("#commenttextarea").val()
+            "text":editor.codemirror.getValue()
+        },
+        success:function(){
+            //alert("updated");
+            if(dohide == true){
+                $('#commenteditor').modal('hide');
+            }
+        }
+    }); 
+}
 
 
 $(function(){
     $('#saveeditor').click(function(event) {
-        $.ajax({
-            url:"/editcomment",
-            method:"POST",
-            data:{
-                "nodeid":$("#commenttextarea").data("nodeid"),
-                "commentid":$("#commenttextarea").data("commentid"),
-                //"text":$("#commenttextarea").val()
-                "text":editor.codemirror.getValue()
-            },
-            success:function(){
-                //alert("updated");
-                $('#commenteditor').modal('hide');
-                updatenode($("#commenttextarea").data("nodeid"));
-
-            }
-        });
+        dosave(true);
     });
 });
 
