@@ -22,5 +22,5 @@ type BackEnd interface {
 	ListNodes() []JSTreeNode
 	GetNode(id string) (Node, error)
 	StartNode(id string) error
-	EditComment(id string, c Comment) error //special ID of CREATE = create new comment
+	EditComment(id, commentid, text string) error //special ID of CREATE = create new comment
 }

@@ -79,11 +79,4 @@ func TestEditComment(t *testing.T) {
 	}
 	r.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	w := httptest.NewRecorder()
-	failbackend := &mockbackends.FailBackend{false, structs.Comment{Id: "CREATE", ModTime: "", Text: text}}
-	frontend := NewFrontEndServer(failbackend)
-	frontend.EditComment(w, r)
-	if w.Code != http.StatusOK {
-		t.Fatalf("Error in TestEditComment")
-	}
 }

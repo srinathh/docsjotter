@@ -15,7 +15,7 @@ type FakeBackend struct {
 	Nodes  map[string]structs.Node
 }
 
-func (f *FakeBackend) EditComment(id string, c structs.Comment) error {
+func (f *FakeBackend) EditComment(id, commentid, text string) error {
 
 	f.Locker.Lock()
 	defer f.Locker.Unlock()
@@ -24,8 +24,9 @@ func (f *FakeBackend) EditComment(id string, c structs.Comment) error {
 	if !ok {
 		return fmt.Errorf("FakeBackend.EditComment - Node requested %s not found", id)
 	}
-
+	var c structs.Comment
 	c.ModTime = time.Now().Format(time.Stamp)
+	c.Text = text
 
 	if c.Id == "CREATE" {
 		c.Id = utils.DoHash(fmt.Sprintf("%s%d", c.Text, time.Now().UnixNano()))

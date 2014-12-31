@@ -26,14 +26,7 @@ func (s *FrontEndServer) EditComment(w http.ResponseWriter, r *http.Request) {
 
 	//log.Printf("NodeID: %s, Commentid: %s, text: %s", nodeid, commentid, text)
 
-	//return
-	c := structs.Comment{
-		Id:      commentid,
-		Text:    text,
-		ModTime: "",
-	}
-
-	if err := s.backend.EditComment(nodeid, c); err != nil {
+	if err := s.backend.EditComment(nodeid, commentid, text); err != nil {
 		http.Error(w, "Could not edit comment", http.StatusBadRequest)
 		log.Printf("Error editing comment: %s : %s", nodeid, err)
 		return

@@ -1,4 +1,4 @@
-package fsbackend
+package fsbackend2
 
 import (
 	"fmt"
@@ -18,7 +18,7 @@ type FSNode struct {
 	path string
 }
 
-type FSBackend struct {
+type FSBackend2 struct {
 	locker  sync.RWMutex
 	roots   []string
 	fsnodes map[string]FSNode //we will store the path to a directory structure
@@ -26,8 +26,8 @@ type FSBackend struct {
 
 const COMMENTSUFFIX string = ".powerdocs.json"
 
-func NewFSBackend(roots []string) *FSBackend {
-	var f FSBackend
+func NewFSBackend2(roots []string) *FSBackend2 {
+	var f FSBackend2
 	f.roots = roots
 	f.fsnodes = make(map[string]FSNode)
 	f.populate()
@@ -44,27 +44,27 @@ type BackEnd interface {
 
 */
 
-func (f *FSBackend) StartNode(id string) error {
+func (f *FSBackend2) StartNode(id string) error {
 
 	f.locker.RLock()
 	fsnode, exists := f.fsnodes[id]
 	if !exists {
-		return fmt.Errorf("FSBackend.StartNode: Error node id %s does not exist", id)
+		return fmt.Errorf("FSBackend2.StartNode: Error node id %s does not exist", id)
 	}
 	f.locker.RUnlock()
 
 	if err := utils.Start(fsnode.path); err != nil {
-		return fmt.Errorf("FSBackend.Startnode: Error opening node %s:%s", fsnode.path, err)
+		return fmt.Errorf("FSBackend2.Startnode: Error opening node %s:%s", fsnode.path, err)
 	}
 	return nil
 }
 
-func (f *FSBackend) EditComment(id, commentid, text string) error {
+func (f *FSBackend2) EditComment(id, commentid, text string) error {
 
 	f.locker.RLock()
 	fsnode, exists := f.fsnodes[id]
 	if !exists {
-		return fmt.Errorf("FSBackend.EditComment: Error node id %s does not exist", id)
+		return fmt.Errorf("FSBackend2.EditComment: Error node id %s does not exist", id)
 	}
 	f.locker.RUnlock()
 
@@ -106,12 +106,12 @@ func (f *FSBackend) EditComment(id, commentid, text string) error {
 
 } //special ID of CREATE = create new comment
 
-func (f *FSBackend) GetNode(id string) (structs.Node, error) {
+func (f *FSBackend2) GetNode(id string) (structs.Node, error) {
 
 	f.locker.RLock()
 	fsnode, exists := f.fsnodes[id]
 	if !exists {
-		return structs.Node{}, fmt.Errorf("FSBackend.GetNode: Error node id %s does not exist", id)
+		return structs.Node{}, fmt.Errorf("FSBackend2.GetNode: Error node id %s does not exist", id)
 	}
 
 	f.locker.RUnlock()
@@ -175,7 +175,7 @@ func fetchcomments(path string, isdir bool) []structs.Comment {
 
 }
 
-func (f *FSBackend) ListNodes() []structs.JSTreeNode {
+func (f *FSBackend2) ListNodes() []structs.JSTreeNode {
 	f.locker.RLock()
 	defer f.locker.RUnlock()
 
@@ -187,7 +187,7 @@ func (f *FSBackend) ListNodes() []structs.JSTreeNode {
 	return ret
 }
 
-func (f *FSBackend) populate() {
+func (f *FSBackend2) populate() {
 	f.locker.Lock()
 	defer f.locker.Unlock()
 
@@ -195,7 +195,7 @@ func (f *FSBackend) populate() {
 		err := filepath.Walk(root, func(path string, fi os.FileInfo, err error) error {
 			//log errors but don't stop walking the path
 			if err != nil {
-				log.Printf("FSBackend.Walk: Skipping file %s due to error scanning: %s", path, err)
+				log.Printf("FSBackend2.Walk: Skipping file %s due to error scanning: %s", path, err)
 				return nil
 			}
 
@@ -222,7 +222,7 @@ func (f *FSBackend) populate() {
 		})
 
 		if err != nil {
-			log.Printf("FSBackend.Walk: Unaccountable error on Walk :%s in root :%s", err, root)
+			log.Printf("FSBackend2.Walk: Unaccountable error on Walk :%s in root :%s", err, root)
 		}
 	}
 }

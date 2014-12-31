@@ -3,8 +3,6 @@ package structs
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"github.com/BurntSushi/toml"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
