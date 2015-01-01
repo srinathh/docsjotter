@@ -78,6 +78,9 @@ func (f *FSBackend) EditComment(id, commentid, text string) error {
 	var c structs.Comment
 	c.ModTime = time.Now().Format(time.Stamp)
 	c.Text = text
+	c.Id = commentid
+
+	log.Println(c)
 
 	if c.Id == "CREATE" {
 		c.Id = utils.DoHash(fmt.Sprintf("%s%d", c.Text, time.Now().UnixNano()))
