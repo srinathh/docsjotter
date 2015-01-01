@@ -1,67 +1,100 @@
 package main
 
 import (
-	"github.com/BurntSushi/toml"
+	"fmt"
+	"github.com/cespare/flagconf"
 	"github.com/justinas/alice"
 	"github.com/srinathh/powerdocs/frontend"
 	"github.com/srinathh/powerdocs/fsbackend"
-	//"github.com/srinathh/powerdocs/mockbackends"
+	"github.com/srinathh/powerdocs/mockbackends"
 	"github.com/srinathh/powerdocs/structs"
 	"log"
 	"net/http"
-	"os"
 )
 
 type Config struct {
-	Http   string   `toml:"http"`
-	Roots  []string `toml:"roots"`
-	Resdir string   `toml:"resdir"`
+	Http   string `desc:"the IP address and port for the DocsJotter server. Defaults to 127.0.0.1:8989"`
+	Root   string `desc:"which directory to serve"`
+	Resdir string `desc:"path to the DocsJotter resource files. Defaults to html"`
+	Mode   string `desc:"can take values production, fstest or mocktest. In production mode, Root must be speciried. In fstest, root defaults to testdata. MockTest uses a mock backend"`
 }
 
 var config Config
 
-func SetupConfig() {
-	f, err := os.Open("config.toml")
-	if err != nil {
-		log.Fatalf("Unable to open config.toml : %s", err)
+func ParseConfig() error {
+	config = Config{
+		Http:   "127.0.0.1:8989",
+		Root:   "",
+		Resdir: "html",
+		Mode:   "fstest",
 	}
 
-	_, err = toml.DecodeReader(f, &config)
-	if err != nil {
-		log.Fatalf("Unable to read config.toml:%s", err)
+	if err := flagconf.Parse("docsjotter.toml", &config); err != nil {
+		return fmt.Errorf("Could not find docsjotter.toml: %s", err)
 	}
-	//tk if some keys are not defined, replace them with default values
+
+	switch config.Mode {
+	case "fstest":
+		config.Root = "testdata"
+	}
+	return nil
+}
+
+//struct FrontEnd stores references to different http.HandlerFunc that will be bound to routes
+//by the PowerDocs server. This enables easy swapping of FrontEnd handlers in a piecemeal
+//fashion for testing and development. PowerDocs uses github.com/justinas/alice to chain middleware
+type AppHandlers struct {
+	ServeStatic http.HandlerFunc //HandlerFunc to serve the static assets like javascript and css
+	ServeIndex  http.HandlerFunc //HandlerFunc to serve index page
+	ServeTree   http.HandlerFunc
+	ServeNode   http.HandlerFunc
+	StartNode   http.HandlerFunc
+	EditComment http.HandlerFunc
+	MiddleWare  alice.Chain
 }
 
 func main() {
-	SetupConfig()
-	var frontendserver structs.FrontEnd
-	frontendserver.MiddleWare = alice.New(LogHandler)
-
-	if staticserver, err := NewStaticServer(config.Resdir); err != nil {
-		log.Fatalf("Error configuring static server : %s", err)
-	} else {
-		frontendserver.ServeStatic = staticserver.ServeHTTP
+	if err := ParseConfig(); err != nil {
+		log.Fatalf("Error reading configuration %s:", err)
 	}
 
-	//backend := mockbackends.NewFakeBackend()
-	backend := fsbackend.NewFSBackend(config.Roots)
-	f := frontend.NewFrontEndServer(backend)
+	//setup the middleware
+	var apphandlers AppHandlers
+	apphandlers.MiddleWare = alice.New(LogHandler)
+
+	//setup the Resource and index Handlers
+	staticserver, err := NewStaticServer(config.Resdir)
+	if err != nil {
+		log.Fatalf("Error configuring static server : %s", err)
+	}
+	apphandlers.ServeStatic = staticserver.ServeHTTP
+	apphandlers.ServeIndex = staticserver.ServeHTTP
+
+	var bk structs.BackEnd
+
+	switch config.Mode {
+	case "mocktest":
+		bk = mockbackends.NewFakeBackend()
+	default:
+		bk = fsbackend.NewFSBackend([]string{config.Root})
+	}
+
+	f := frontend.NewFrontEndServer(bk)
 
 	//we're doing this rather than just use an interface to enable components to be
 	//swapped out on the fly
-	frontendserver.ServeTree = f.ServeTree
-	frontendserver.ServeNode = f.ServeNode
-	frontendserver.StartNode = f.StartNode
-	frontendserver.EditComment = f.EditComment
+	apphandlers.ServeTree = f.ServeTree
+	apphandlers.ServeNode = f.ServeNode
+	apphandlers.StartNode = f.StartNode
+	apphandlers.EditComment = f.EditComment
 
 	//Setting up te resource Handlers
 	//http.Handle("/res/", staticserver)
-	http.Handle("/", frontendserver.MiddleWare.ThenFunc(frontendserver.ServeStatic))
-	http.Handle("/servetree", frontendserver.MiddleWare.ThenFunc(frontendserver.ServeTree))
-	http.Handle("/servenode", frontendserver.MiddleWare.ThenFunc(frontendserver.ServeNode))
-	http.Handle("/startnode", frontendserver.MiddleWare.ThenFunc(frontendserver.StartNode))
-	http.Handle("/editcomment", frontendserver.MiddleWare.ThenFunc(frontendserver.EditComment))
+	http.Handle("/", apphandlers.MiddleWare.ThenFunc(apphandlers.ServeStatic))
+	http.Handle("/servetree", apphandlers.MiddleWare.ThenFunc(apphandlers.ServeTree))
+	http.Handle("/servenode", apphandlers.MiddleWare.ThenFunc(apphandlers.ServeNode))
+	http.Handle("/startnode", apphandlers.MiddleWare.ThenFunc(apphandlers.StartNode))
+	http.Handle("/editcomment", apphandlers.MiddleWare.ThenFunc(apphandlers.EditComment))
 
 	//Start the service
 	log.Printf("Serving on %s\n", config.Http)
