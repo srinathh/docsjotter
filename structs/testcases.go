@@ -31,8 +31,8 @@ func GenNodes() map[string]Node {
 
 	Nodes := make(map[string]Node)
 
-	Nodes["0"] = Node{
-		Id:       "0",
+	Nodes[utils.DoHash("root")] = Node{
+		Id:       utils.DoHash("root"),
 		Name:     "root",
 		Type:     "directory",
 		Parent:   "#",
@@ -40,101 +40,101 @@ func GenNodes() map[string]Node {
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["1"] = Node{
-		Id:       "1",
+	Nodes[utils.DoHash("root/Folder 1")] = Node{
+		Id:       utils.DoHash("root/Folder 1"),
 		Name:     "Folder 1",
 		Type:     "directory",
-		Parent:   "0",
+		Parent:   utils.DoHash("root"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["2"] = Node{
-		Id:       "2",
+	Nodes[utils.DoHash("root/Folder 1/SubFolder")] = Node{
+		Id:       utils.DoHash("root/Folder 1/SubFolder"),
 		Name:     "SubFolder",
 		Type:     "directory",
-		Parent:   "1",
+		Parent:   utils.DoHash("root/Folder 1"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["3"] = Node{
-		Id:       "3",
+	Nodes[utils.DoHash("root/Folder 1/SubFolder/Audio File in SubFolder")] = Node{
+		Id:       utils.DoHash("root/Folder 1/SubFolder/Audio File in SubFolder"),
 		Name:     "Audio File in SubFolder",
 		Type:     "audio",
-		Parent:   "2",
+		Parent:   utils.DoHash("root/Folder 1/SubFolder"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["4"] = Node{
-		Id:       "4",
+	Nodes[utils.DoHash("root/Folder 1/SubFolder/Video File in SubFolder")] = Node{
+		Id:       utils.DoHash("root/Folder 1/SubFolder/Video File in SubFolder"),
 		Name:     "Video File in SubFolder",
 		Type:     "video",
-		Parent:   "2",
+		Parent:   utils.DoHash("root/Folder 1/SubFolder"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["5"] = Node{
-		Id:       "5",
+	Nodes[utils.DoHash("root/Folder 1/Image File in Folder 1")] = Node{
+		Id:       utils.DoHash("root/Folder 1/Image File in Folder 1"),
 		Name:     "Image File in Folder 1",
 		Type:     "image",
-		Parent:   "1",
+		Parent:   utils.DoHash("root/Folder 1"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["6"] = Node{
-		Id:       "6",
+	Nodes[utils.DoHash("root/Folder 1/Word File in Folder 1")] = Node{
+		Id:       utils.DoHash("root/Folder 1/Word File in Folder 1"),
 		Name:     "Word File in Folder 1",
 		Type:     "msword",
-		Parent:   "1",
+		Parent:   utils.DoHash("root/Folder 1"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["7"] = Node{
-		Id:       "7",
+	Nodes[utils.DoHash("root/Folder 2")] = Node{
+		Id:       utils.DoHash("root/Folder 2"),
 		Name:     "Folder 2",
 		Type:     "directory",
-		Parent:   "0",
+		Parent:   utils.DoHash("root"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["8"] = Node{
-		Id:       "8",
+	Nodes[utils.DoHash("root/Folder 2/Text File in Folder 2")] = Node{
+		Id:       utils.DoHash("root/Folder 2/Text File in Folder 2"),
 		Name:     "Text File in Folder 2",
 		Type:     "text",
-		Parent:   "7",
+		Parent:   utils.DoHash("root/Folder 2"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["9"] = Node{
-		Id:       "9",
+	Nodes[utils.DoHash("root/Folder 2/PowerPoint File in Folder 2")] = Node{
+		Id:       utils.DoHash("root/Folder 2/PowerPoint File in Folder 2"),
 		Name:     "PowerPoint File in Folder 2",
 		Type:     "vnd.ms-powerpoint",
-		Parent:   "7",
+		Parent:   utils.DoHash("root/Folder 2"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["10"] = Node{
-		Id:       "10",
+	Nodes[utils.DoHash("root/PDF File in Root")] = Node{
+		Id:       utils.DoHash("root/PDF File in Root"),
 		Name:     "PDF File in Root",
 		Type:     "pdf",
-		Parent:   "0",
+		Parent:   utils.DoHash("root"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
 	}
-	Nodes["11"] = Node{
-		Id:       "11",
+	Nodes[utils.DoHash("root/HTML File in Root")] = Node{
+		Id:       utils.DoHash("root/HTML File in Root"),
 		Name:     "HTML File in Root",
 		Type:     "html",
-		Parent:   "0",
+		Parent:   utils.DoHash("root"),
 		ModTime:  time.Now().Format(time.Stamp),
 		Size:     "100 Kb",
 		Comments: GenComments(5),
