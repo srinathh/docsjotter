@@ -13,7 +13,7 @@ import (
 )
 
 func TestServeNode(t *testing.T) {
-	r, err := http.NewRequest("GET", "/servenode?id=2", nil)
+	r, err := http.NewRequest("GET", "/servenode?id=15f8c86f8b5e2fac", nil)
 	if err != nil {
 		t.Fatalf("Error in creating new request :%s", err)
 	}
@@ -30,7 +30,7 @@ func TestServeNode(t *testing.T) {
 		t.Errorf("Error in decode %s", err)
 	}
 
-	want := fakebackend.Nodes["2"]
+	want := fakebackend.Nodes["15f8c86f8b5e2fac"]
 
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("Mismatch in want and got\n%s\n%s", want, got)
@@ -71,7 +71,7 @@ func TestEditComment(t *testing.T) {
 	data := url.Values{}
 	data.Add("commentid", "CREATE")
 	data.Add("text", text)
-	data.Add("nodeid", "0")
+	data.Add("nodeid", "15f8c86f8b5e2fac")
 
 	r, err := http.NewRequest("POST", "/editcomment", strings.NewReader(data.Encode()))
 	if err != nil {

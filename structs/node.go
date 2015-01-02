@@ -45,13 +45,6 @@ type Comment struct {
 	ModTime string
 }
 
-//type Hashtag represents data served to client in response to /servehashtag?tag=?
-//it consists of the tag itself and a
-type HashTag struct {
-	Tag      string
-	Comments map[string][]Comment //Node IDs are keys and respective comments within Node IDs
-}
-
 func (n Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	var buf bytes.Buffer

@@ -88,7 +88,7 @@ func main() {
 	apphandlers.StartNode = f.StartNode
 	apphandlers.EditComment = f.EditComment
 
-	//Setting up te resource Handlers
+	//Setting up te resource Handler	s
 	//http.Handle("/res/", staticserver)
 	http.Handle("/", apphandlers.MiddleWare.ThenFunc(apphandlers.ServeStatic))
 	http.Handle("/servetree", apphandlers.MiddleWare.ThenFunc(apphandlers.ServeTree))

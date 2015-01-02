@@ -1,7 +1,7 @@
 package structs
 
 import (
-	"bytes"
+	//"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -64,6 +64,8 @@ func TestJSTree(t *testing.T) {
 
 }
 
+/*
+
 func TestReadWriteComments(t *testing.T) {
 
 	want := GenComments(15)
@@ -84,3 +86,4 @@ func TestReadWriteComments(t *testing.T) {
 	}
 
 }
+*/

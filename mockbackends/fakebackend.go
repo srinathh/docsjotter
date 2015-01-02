@@ -82,7 +82,7 @@ func NewFakeBackend() *FakeBackend {
 	rand.Seed(9)
 	var f FakeBackend
 	f.Locker.Lock()
-	f.Nodes = structs.GenNodes()
+	f.Nodes = GetTestCases()
 	f.Locker.Unlock()
 	return &f
 
