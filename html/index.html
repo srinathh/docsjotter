@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Docs Intel</title>
+    <title>DocsJotter</title>
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -14,31 +14,67 @@
     <link rel="stylesheet" href="/res/editor/editor.css" />
 </head>
 <body>
+
+    <nav class="navbar navbar-default navbar-fixed-top">
+        <a class="navbar-brand" href="/">DocsJotter</a>
+        <form class="navbar-form navbar-left" role="search">
+            <div class="form-group">
+                <select id="tagselector" class="form-control">
+                  <option>#todo</option>
+                  <option>#talk</option>
+                </select>
+            </div>
+            <button id="viewtagbtn" class="btn">View Tag</button>
+        </form>
+    </nav>
+
     <section class="sidebar" >
         <div class="foldertree" id="foldertree"></div> 
     </section>
     <section class="content">
-        <header>
-            <h2 id="NodeName"></h2>
-            <div id="details" class="panel panel-success">
-                <table class="table">
-                    <thead>
-                    <tr>
-                        <th>Type</th>
-                        <th>Last Modified</th>
-                        <th>Size</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                        <td id="NodeType"></td>
-                        <td id="NodeModTime"></td>
-                        <td id="NodeSize"></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div id="alertcontainer"></div>
+        <header id="contentheader">
+            <script id="filenode" type="text/html">
+                <h2 data-id="{{Id}}" id="NodeName">
+                    <button id="openbutton" data-id="{{Id}}" class="btn btn-default" role="button">
+                        <span class="glyphicon glyphicon-open" />
+                    </button>
+                    &nbsp;{{Name}}
+                </h2>
+                <div id="details" class="panel panel-success">
+                    <table class="table">
+                        <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Last Modified</th>
+                            <th>Size</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                            <td id="NodeType">{{Type}}</td>
+                            <td id="NodeModTime">{{ModTime}}</td>
+                            <td id="NodeSize">{{Size}}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </script>
         </header>
         <div id="Comments">
+            <script id="nodecomment" type="text/html">
+                <article class="panel">
+                    <header>
+                        <div class="panel-heading">
+                            {{ModTime}}
+                            <a class="cedit" data-id="{{Id}}" data-text="{{Text}}" href="#">
+                                <span style="color:white;" class="glyphicon {{IconName}} pull-right">
+                                </span>
+                            </a>
+                        </div>
+                    </header>
+                    <div class="panel-body">{{{MDParsedText}}}</div>
+                </article>
+            </script>
 
         </div>
     </section>
@@ -67,6 +103,9 @@
     <script src="/res/jstree/jstree.min.js" ></script>
     <script src="/res/marked/marked.min.js"></script>
     <script src="/res/editor/editor.js"></script>
+    <script src="/res/template/mustache.min.js"></script>
+    <script src="/res/template/ICanHaz-no-mustache.min.js"></script>
+
     <script src="/res/custom/custom.js" ></script>
 
 </body>

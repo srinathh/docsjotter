@@ -1,4 +1,5 @@
-//Initialize the JSTree
+
+//Initialize the JSTree after the page is ready
 $(function(){
     $("#foldertree").jstree({
         "core" : {
@@ -26,13 +27,8 @@ $(function(){
     });
 });
 
-var editor;
-$(function(){
-    editor = new Editor();
-    editor.render();
-});
 
-//Make JSTree automatically select the first node after it is ready
+//Make JSTree automatically select and open the first node after JSTree is ready
 $(function(){
     $('#foldertree').on("ready.jstree", function(){
         $('#foldertree').jstree("select_node","ul > li:first")
@@ -40,45 +36,96 @@ $(function(){
     });
 });
 
-var shownode = function(nodedata){
-    $("#NodeType").text(nodedata.Type);
-    $("#NodeSize").text(nodedata.Size);
-    $("#NodeModTime").text(nodedata.ModTime);
+//on double click, start the node
+$(function(){
+    $('#foldertree').on('dblclick', '.jstree-node', function (e) {
+        startnode(this.id); 
+        e.stopPropagation();
+     });
+});
 
-    $("#NodeName").html('<button id="openbutton" data-id="'+nodedata.Id+'" class="btn btn-default" role="button"><span class="glyphicon glyphicon-open" /></button>&nbsp;'+nodedata.Name);
-    
+//onselecting a node, fetch node details and then show the node
+$(function(){
+    $('#foldertree').on("select_node.jstree", function(e, data){
+        fetchnode(data.node.id, shownode);
+    });
+});
+
+//issues a windows start or linux xdg-open command on the node
+var startnode = function(nodeid){
+    $.ajax({
+        url:"/startnode",
+        data:{
+            "id":nodeid
+        },
+        error: function( xhr, status, errorThrown ) {
+            show_alert(ALERT_WARNING,"Could not start the requested node")
+        },
+        success: function(){
+            show_alert(ALERT_SUCCESS,"Started the requested node")  
+        }
+    });   
+}
+
+//fetchnode calls server on /servenode?id= to fetch the node with the required nodeid
+//and on success, it calls the function onsuccess(data) with the returned node data
+var fetchnode = function(nodeid, onsuccess){
+    $.ajax({
+        url:"/servenode",
+        datatype:"json",
+        data:{
+            "id":nodeid
+        },
+        success:function(data){
+            onsuccess(data);
+        },
+        error: function( xhr, status, errorthrown ) {
+            show_alert(ALERT_DANGER, "Error fetching the requested node");
+        }
+    });
+}
+
+
+
+var shownode = function(nodedata){
+    $("#contentheader").html(ich.filenode(nodedata));
+
     $("#openbutton").click(function(){
-        $.ajax({
-            url:"/startnode",
-            data:{
-                "id":$("#openbutton").data("id")
-            },
-            error: function( xhr, status, errorThrown ) {
-                alert( "Sorry, there was a problem!" + errorThrown + status );
-            }
-        });
+        startnode($(this).data("id"));
     });
 
-    $("#Comments").children().remove();
     nodedata.Comments.splice(0, 0, {Id:"CREATE",ModTime:"Click on the pencil to create a new comment...",Text:""});
 
+    $("#Comments").children().remove();
+
     for (var i = 0; i < nodedata.Comments.length; i++){
-        $("#Comments").append('<article class="panel"><header><div class="panel-heading">'+nodedata.Comments[i].ModTime+'<a id="cedit'+i.toString()+'" data-nodeid="'+nodedata.Id+'" data-commentid="'+nodedata.Comments[i].Id+'" data-text="'+ nodedata.Comments[i].Text+'" href="#"><span style="color:white;" class="glyphicon glyphicon-pencil pull-right"></span></a></div></header><div class="panel-body">'+marked(nodedata.Comments[i].Text)+'</div></article>');
-                
-        $("#cedit"+i.toString()).click(function(evt){
-            //$('#commenttextarea').text($(this).data("text"));
-            $('#commenttextarea').data("nodeid",$(this).data("nodeid"));
-            $('#commenttextarea').data("commentid",$(this).data("commentid"));
-            //editor.codemirror.setValue($(this).data("text"));
-            editor.codemirror.setValue($(this).data("text"));
-            $('#commenteditor').modal();
-            evt.preventDefault();
-        });
-    } 
+        nodedata.Comments[i]["MDParsedText"]=marked(nodedata.Comments[i]["Text"]);
+        nodedata.Comments[i]["IconName"]="glyphicon-pencil";
+        $("#Comments").append(ich.nodecomment(nodedata.Comments[i]));
+    }
+
+    $(".cedit").click(function(evt){
+        $('#commenttextarea').data("nodeid",$("#NodeName").data("id"));
+        $('#commenttextarea').data("commentid",$(this).data("id"));
+        editor.codemirror.setValue($(this).data("text"));
+        $('#commenteditor').modal();
+        evt.preventDefault();
+    });
 };
+
+//-------------------------------------------------------------------------
+//Editor javascript
 
 var intervalid;
 
+//initialize the editor on page ready
+var editor;
+$(function(){
+    editor = new Editor();
+    editor.render();
+});
+
+//refresh codemirror after edit window is show and start autosave
 $('#commenteditor').on('shown.bs.modal', function (e) {
     editor.codemirror.refresh(); 
     intervalid = setInterval(function(){
@@ -86,12 +133,13 @@ $('#commenteditor').on('shown.bs.modal', function (e) {
     }, 2500);
 });
 
+//shut down autosave when editor window is hidden and update the node displayed
 $('#commenteditor').on('hidden.bs.modal', function (e) {
     clearInterval(intervalid);
-    updatenode($("#commenttextarea").data("nodeid"));
+    fetchnode($("#NodeName").data("id"),shownode);
 });
 
-
+//save the editor comment
 var dosave = function(dohide){
    $.ajax({
         url:"/editcomment",
@@ -118,53 +166,21 @@ $(function(){
     });
 });
 
-var updatenode = function(nodeid){
+var ALERT_SUCCESS = "alert-success";
+var ALERT_INFO = "alert-info";
+var ALERT_WARNING = "alert-warning"
+var ALERT_DANGER = "alert-danger"
 
-        $.ajax({
-            url:"/servenode",
-            datatype:"json",
-            data:{
-                "id":nodeid
-            },
-            success:function(data){
-                shownode(data);
-            },
-            error: function( xhr, status, errorthrown ) {
-                alert( "sorry, there was a problem!" );
-                console.log( "error: " + errorthrown );
-                console.log( "status: " + status );
-                console.dir( xhr );
-            }
-
-        })
-
+var show_alert = function(alert_type, alert_text){
+    $('#alertcontainer').html('<div class="alert '+alert_type+' alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>'+alert_text+'</div>');
 }
 
 
-$(function(){
-    $('#foldertree').on("select_node.jstree", function(e, data){
-        updatenode(data.node.id);
 
+//tags
+$(function(){
+    $('#viewtagbtn').click(function(e){
+        show_alert(ALERT_INFO, "Will try to fetch and show the tag details");
+        e.preventDefault();
     });
-
 });
-
-$(function(){
-    $('#foldertree').on('dblclick', '.jstree-node', function (e) {
-            $.ajax({
-                url:"/startnode",
-                data:{
-                    "id":this.id
-                },
-                error: function( xhr, status, errorThrown ) {
-                    alert( "Sorry, there was a problem!" + errorThrown + status );
-                }
-            });        
-        e.stopPropagation();
-     });
-});
-
-$('#refreshbutton').click(function() {
-    location.reload(true);
-});
-

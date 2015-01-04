@@ -7,7 +7,8 @@
 	height: 100%;
 	color:#FFF;
 	overflow: scroll;
-	background: #222222
+	background: #222222;
+	padding-top:70px;
 }
 
 .content{
@@ -19,7 +20,8 @@
 	overflow: scroll;
 	padding-right: 1%;
 	padding-left:1%;
-	background: #b6deff
+	background: #b6deff;
+	padding-top:60px;
 }
 
 
@@ -62,8 +64,6 @@ background: -moz-radial-gradient(top left, ellipse cover, rgba(105,155,200,1) 0%
 .panel{
 	border: none;
 }
-
-.sidebar { padding-top: 20px; }
 
 textarea{
 	color:"black";
