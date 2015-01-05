@@ -85,70 +85,96 @@ var fetchnode = function(nodeid, onsuccess){
     });
 }
 
+//nodedetails is a hashmap which must have the keys Type, ModTime and Size
+var buildheader = function(title,id, hide_button){
+    header = ich.pagetitle({Title:title, Id:id});
+    
+    if (hide_button !== undefined){
+        $(header).find('#'+id+'_button').hide();
+    }
+    return header;
+}
 
+var builddetails = function(hashmap){
+    showkeys = []
+    showvalues = []
+    for (var key in hashmap){
+        showkeys.push(key)
+        showvalues.push(hashmap[key])
+    }
+    return ich.nodedetails({keys:showkeys, values:showvalues});
+}
+
+var buildarticle = function(id, title, text){
+    return ich.articletemplate({"ArticleId":id, "ArticleTitle":title, "ArticleText":text, "ArticleBody":marked(text)});
+}
+
+var fetchid=function(text){
+    return text.substr(0,text.lastIndexOf("_"));
+}
 
 var shownode = function(nodedata){
-    $("#contentheader").html(ich.filenode(nodedata));
+    header = buildheader(nodedata.Name, nodedata.Id);
+    details = builddetails({"File Type":nodedata.Type,"Last Modified":nodedata.ModTime,"Size":nodedata.Size});
+    $("#contentheader").html(header);
+    $("#contentheader").append(details);
 
-    $("#openbutton").click(function(){
-        startnode($(this).data("id"));
-    });
+    $("#articles").children().remove();
+    $("#articles").append(buildarticle("CREATE","Click on the pencil to create a new comment...",""));
 
-    nodedata.Comments.splice(0, 0, {Id:"CREATE",ModTime:"Click on the pencil to create a new comment...",Text:""});
-
-    $("#Comments").children().remove();
-
-    for (var i = 0; i < nodedata.Comments.length; i++){
-        nodedata.Comments[i]["MDParsedText"]=marked(nodedata.Comments[i]["Text"]);
-        nodedata.Comments[i]["IconName"]="glyphicon-pencil";
-        $("#Comments").append(ich.nodecomment(nodedata.Comments[i]));
+    for( var i = 0; i < nodedata.Comments.length; i++){
+        c = nodedata.Comments[i]
+        $("#articles").append(buildarticle(c.Id,c.ModTime,c.Text));
     }
 
-    $(".cedit").click(function(evt){
-        $('#commenttextarea').data("nodeid",$("#NodeName").data("id"));
-        $('#commenttextarea').data("commentid",$(this).data("id"));
-        editor.codemirror.setValue($(this).data("text"));
-        $('#commenteditor').modal();
-        evt.preventDefault();
+    $(".articletitle").click(function(e){ e.preventDefault(); });
+   
+    $(".articlebutton").click(function(e){
+        var ondone = function(){
+            fetchnode(nodedata.Id, shownode);
+        }
+        showeditor($(this).data('text'),fetchid($(this).attr("id")),nodedata.Id, ondone);
+        e.preventDefault();
     });
 };
+
+var showeditor = function(text, id, nodeid, ondone){
+    $('#editorcontainer').append('<textarea></textarea>')
+    editor = new Editor();
+    editor.render();
+    editor.codemirror.setValue(text);
+    $('#commenteditor').data("editor", editor);
+    $('#commenteditor').data("id", id);
+    $('#commenteditor').data("nodeid", nodeid);
+    $('#commenteditor').data("ondone", ondone);
+    $('#commenteditor').modal();
+}
+
+//tk modularize the editor
 
 //-------------------------------------------------------------------------
 //Editor javascript
 
-var intervalid;
-
-//initialize the editor on page ready
-var editor;
-$(function(){
-    editor = new Editor();
-    editor.render();
-});
-
 //refresh codemirror after edit window is show and start autosave
 $('#commenteditor').on('shown.bs.modal', function (e) {
-    editor.codemirror.refresh(); 
-    intervalid = setInterval(function(){
-        dosave(false);
-    }, 2500);
+    editor.codemirror.refresh();
 });
 
 //shut down autosave when editor window is hidden and update the node displayed
 $('#commenteditor').on('hidden.bs.modal', function (e) {
-    clearInterval(intervalid);
-    fetchnode($("#NodeName").data("id"),shownode);
+    $('#editorcontainer').children().remove();
+    $('#commenteditor').data("ondone")();
 });
 
-//save the editor comment
+//save the editor comment. Move to single id vs. multiple ids
 var dosave = function(dohide){
    $.ajax({
         url:"/editcomment",
         method:"POST",
         data:{
-            "nodeid":$("#commenttextarea").data("nodeid"),
-            "commentid":$("#commenttextarea").data("commentid"),
-            //"text":$("#commenttextarea").val()
-            "text":editor.codemirror.getValue()
+            "commentid":$("#commenteditor").data("id"),
+            "nodeid":$("#commenteditor").data("nodeid"),
+            "text":$("#commenteditor").data("editor").codemirror.getValue()
         },
         success:function(){
             //alert("updated");
@@ -166,13 +192,16 @@ $(function(){
     });
 });
 
+
+
 var ALERT_SUCCESS = "alert-success";
 var ALERT_INFO = "alert-info";
 var ALERT_WARNING = "alert-warning"
 var ALERT_DANGER = "alert-danger"
 
 var show_alert = function(alert_type, alert_text){
-    $('#alertcontainer').html('<div class="alert '+alert_type+' alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>'+alert_text+'</div>');
+    //$('#alertcontainer').html('<div class="alert '+alert_type+' alert-dismissible" role="alert"><button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>'+alert_text+'</div>');
+    $('#alertcontainer').html(ich.alertcontent({"alert_text":alert_text, "alert_type":alert_type}));
 }
 
 

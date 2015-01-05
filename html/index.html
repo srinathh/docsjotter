@@ -32,47 +32,71 @@
         <div class="foldertree" id="foldertree"></div> 
     </section>
     <section class="content">
-        <div id="alertcontainer"></div>
+        
+        <div id="alertcontainer">
+            <!-- template for the alert. Params: {{alert_type}}, {{alert_text}}-->
+            <script id="alertcontent" type="text/html">
+                <div class="alert {{alert_type}} alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    {{alert_text}}
+                </div>
+            </script>
+        </div>
+
         <header id="contentheader">
-            <script id="filenode" type="text/html">
-                <h2 data-id="{{Id}}" id="NodeName">
-                    <button id="openbutton" data-id="{{Id}}" class="btn btn-default" role="button">
+            <!-- template for page title. Params: {{Title}}, {{Id}}-->
+            <script id="pagetitle" type="text/html">
+                <h2>
+                    <button id="{{Id}}_button" class="btn btn-default" role="button" style="visibility:{{ButtonVisibility}};">
                         <span class="glyphicon glyphicon-open" />
                     </button>
-                    &nbsp;{{Name}}
+                    {{Title}}
                 </h2>
+            </script>
+
+            <script id="nodedetails" type="text/html">
                 <div id="details" class="panel panel-success">
                     <table class="table">
                         <thead>
                         <tr>
-                            <th>Type</th>
-                            <th>Last Modified</th>
-                            <th>Size</th>
+                            {{#keys}}
+                            <th>{{.}}</th>
+                            {{/keys}}
                         </tr>
                         </thead>
                         <tbody>
-                            <td id="NodeType">{{Type}}</td>
-                            <td id="NodeModTime">{{ModTime}}</td>
-                            <td id="NodeSize">{{Size}}</td>
+                            {{#values}}
+                            <td>{{.}}</td>
+                            {{/values}}
                         </tr>
                         </tbody>
                     </table>
                 </div>
             </script>
         </header>
-        <div id="Comments">
-            <script id="nodecomment" type="text/html">
-                <article class="panel">
+
+        <div id="articles">
+            <!-- Mustache template for each article. 
+                {{ArticleId}}:     UID for article. title will have id="{{ArticleId}}_title" etc
+                {{ArticleTitle}}:  Article title to display
+                {{{ArticleBody}}}: HTML rendering of the Article Body to display
+                {{ArticleText}}:   Regular text of the article, for access via edit
+            -->
+            <script id="articletemplate" type="text/html">
+                <article id="{{ArticleId}}" class="panel">
                     <header>
                         <div class="panel-heading">
-                            {{ModTime}}
-                            <a class="cedit" data-id="{{Id}}" data-text="{{Text}}" href="#">
-                                <span style="color:white;" class="glyphicon {{IconName}} pull-right">
-                                </span>
+                            <a class="articletitle" id="{{ArticleId}}_title" style="color:white;" href="#">
+                                {{ArticleTitle}}
+                            </a>
+                            <a class="articlebutton" id="{{ArticleId}}_button" data-text="{{ArticleText}}" href="#">
+                                <span style="color:white;" class="glyphicon glyphicon-pencil pull-right"></span>
                             </a>
                         </div>
                     </header>
-                    <div class="panel-body">{{{MDParsedText}}}</div>
+                    <div id="{{ArticleId}}_body" class="panel-body">{{{ArticleBody}}}</div>
                 </article>
             </script>
 
@@ -83,19 +107,14 @@
     <div class="modal fade" id="commenteditor" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-            <!--
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                    <h4 class="modal-title">Edit Comment</h4>
-                </div> -->
-                <div class="modal-body">
-                    <textarea rows=15 style="width:100%;" id="commenttextarea"></textarea>
+                <div id="editorcontainer" class="modal-body">
+                    <!-- <textarea rows=15 style="width:100%;" id="commenttextarea"></textarea>-->
                 </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="saveeditor">Save changes</button>
-          </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="saveeditor">Save changes</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <script src="/res/jquery/jquery.min.js" ></script>

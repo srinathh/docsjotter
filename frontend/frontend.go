@@ -24,7 +24,7 @@ func (s *FrontEndServer) EditComment(w http.ResponseWriter, r *http.Request) {
 	commentid := r.FormValue("commentid")
 	text := r.FormValue("text")
 
-	//log.Printf("NodeID: %s, Commentid: %s, text: %s", nodeid, commentid, text)
+	log.Printf("NodeID: %s, Commentid: %s, text: %s", nodeid, commentid, text)
 
 	if err := s.backend.EditComment(nodeid, commentid, text); err != nil {
 		http.Error(w, "Could not edit comment", http.StatusBadRequest)
