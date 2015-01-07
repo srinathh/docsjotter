@@ -49,7 +49,7 @@
             <!-- template for page title. Params: {{Title}}, {{Id}}-->
             <script id="pagetitle" type="text/html">
                 <h2>
-                    <button id="{{Id}}_button" class="btn btn-default" role="button" style="visibility:{{ButtonVisibility}};">
+                    <button class="btn btn-default" role="button" >
                         <span class="glyphicon glyphicon-open" />
                     </button>
                     {{Title}}
@@ -61,9 +61,9 @@
                     <table class="table">
                         <thead>
                         <tr>
-                            {{#keys}}
+                            {{#headings}}
                             <th>{{.}}</th>
-                            {{/keys}}
+                            {{/headings}}
                         </tr>
                         </thead>
                         <tbody>
@@ -85,36 +85,40 @@
                 {{ArticleText}}:   Regular text of the article, for access via edit
             -->
             <script id="articletemplate" type="text/html">
-                <article id="{{ArticleId}}" class="panel">
+                <article class="panel">
                     <header>
                         <div class="panel-heading">
-                            <a class="articletitle" id="{{ArticleId}}_title" style="color:white;" href="#">
+                            <a class="articletitle" style="color:white;" href="#">
                                 {{ArticleTitle}}
                             </a>
-                            <a class="articlebutton" id="{{ArticleId}}_button" data-text="{{ArticleText}}" href="#">
+                            <a class="editbutton" href="#">
                                 <span style="color:white;" class="glyphicon glyphicon-pencil pull-right"></span>
                             </a>
                         </div>
                     </header>
-                    <div id="{{ArticleId}}_body" class="panel-body">{{{ArticleBody}}}</div>
+                    <div class="panel-body">{{{ArticleBody}}}</div>
                 </article>
             </script>
 
         </div>
     </section>
 
+    <div id="editmodalcontainer">
     <!-- Modal -->
+    <script id="modaltemplate" type="text/html">
     <div class="modal fade" id="commenteditor" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div id="editorcontainer" class="modal-body">
-                    <!-- <textarea rows=15 style="width:100%;" id="commenttextarea"></textarea>-->
+                    <textarea>{{Text}}</textarea>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-primary" id="saveeditor">Save changes</button>
+                    <button type="button" class="btn btn-primary">Save changes</button>
                 </div>
             </div>
         </div>
+    </div>
+    </script>
     </div>
 
     <script src="/res/jquery/jquery.min.js" ></script>
@@ -124,7 +128,7 @@
     <script src="/res/editor/editor.js"></script>
     <script src="/res/template/mustache.min.js"></script>
     <script src="/res/template/ICanHaz-no-mustache.min.js"></script>
-
+    <script src="/res/custom/templatefn.js" ></script>
     <script src="/res/custom/custom.js" ></script>
 
 </body>

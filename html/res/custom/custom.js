@@ -85,113 +85,113 @@ var fetchnode = function(nodeid, onsuccess){
     });
 }
 
-//nodedetails is a hashmap which must have the keys Type, ModTime and Size
-var buildheader = function(title,id, hide_button){
-    header = ich.pagetitle({Title:title, Id:id});
-    
-    if (hide_button !== undefined){
-        $(header).find('#'+id+'_button').hide();
-    }
-    return header;
-}
-
-var builddetails = function(hashmap){
-    showkeys = []
-    showvalues = []
-    for (var key in hashmap){
-        showkeys.push(key)
-        showvalues.push(hashmap[key])
-    }
-    return ich.nodedetails({keys:showkeys, values:showvalues});
-}
-
-var buildarticle = function(id, title, text){
-    return ich.articletemplate({"ArticleId":id, "ArticleTitle":title, "ArticleText":text, "ArticleBody":marked(text)});
-}
-
-var fetchid=function(text){
-    return text.substr(0,text.lastIndexOf("_"));
-}
 
 var shownode = function(nodedata){
-    header = buildheader(nodedata.Name, nodedata.Id);
-    details = builddetails({"File Type":nodedata.Type,"Last Modified":nodedata.ModTime,"Size":nodedata.Size});
-    $("#contentheader").html(header);
-    $("#contentheader").append(details);
+    $("#contentheader")
+        .html(buildheader(nodedata.Name, nodedata.Id,startnode))
+        .append(builddetails({
+            "File Type":nodedata.Type,
+            "Last Modified":nodedata.ModTime,
+            "Size":nodedata.Size
+        }));
 
-    $("#articles").children().remove();
-    $("#articles").append(buildarticle("CREATE","Click on the pencil to create a new comment...",""));
+    $("#articles").html(buildarticle(nodedata.Id, "CREATE","Click on the pencil to create a new comment...",""));
 
     for( var i = 0; i < nodedata.Comments.length; i++){
         c = nodedata.Comments[i]
-        $("#articles").append(buildarticle(c.Id,c.ModTime,c.Text));
+        $("#articles").append(buildarticle(nodedata.Id, c.Id,c.ModTime,c.Text,function(){
+            fetchnode(nodedata.Id,shownode);
+        }));
     }
 
-    $(".articletitle").click(function(e){ e.preventDefault(); });
-   
-    $(".articlebutton").click(function(e){
-        var ondone = function(){
-            fetchnode(nodedata.Id, shownode);
-        }
-        showeditor($(this).data('text'),fetchid($(this).attr("id")),nodedata.Id, ondone);
-        e.preventDefault();
-    });
 };
 
-var showeditor = function(text, id, nodeid, ondone){
-    $('#editorcontainer').append('<textarea></textarea>')
-    editor = new Editor();
-    editor.render();
-    editor.codemirror.setValue(text);
-    $('#commenteditor').data("editor", editor);
-    $('#commenteditor').data("id", id);
-    $('#commenteditor').data("nodeid", nodeid);
-    $('#commenteditor').data("ondone", ondone);
-    $('#commenteditor').modal();
-}
-
-//tk modularize the editor
-
-//-------------------------------------------------------------------------
-//Editor javascript
-
-//refresh codemirror after edit window is show and start autosave
-$('#commenteditor').on('shown.bs.modal', function (e) {
-    editor.codemirror.refresh();
-});
-
-//shut down autosave when editor window is hidden and update the node displayed
-$('#commenteditor').on('hidden.bs.modal', function (e) {
-    $('#editorcontainer').children().remove();
-    $('#commenteditor').data("ondone")();
-});
-
 //save the editor comment. Move to single id vs. multiple ids
-var dosave = function(dohide){
+var editorsave = function(nodeid,commentid, text){
    $.ajax({
         url:"/editcomment",
         method:"POST",
         data:{
-            "commentid":$("#commenteditor").data("id"),
-            "nodeid":$("#commenteditor").data("nodeid"),
-            "text":$("#commenteditor").data("editor").codemirror.getValue()
+            "commentid":commentid,
+            "nodeid":nodeid,
+            "text":text
+        },
+        error:function(){
+            show_alert(ALERT_WARNING,"Could not save the comment");
         },
         success:function(){
-            //alert("updated");
-            if(dohide == true){
-                $('#commenteditor').modal('hide');
-            }
+            show_alert(ALERT_SUCCESS,"Comment saved")
         }
     }); 
 }
 
 
-$(function(){
-    $('#saveeditor').click(function(event) {
-        dosave(true);
-    });
-});
+//nodedetails is a hashmap which must have the keys Type, ModTime and Size
+var buildheader = function(title,id){
+    header = ich.pagetitle({Title:title});
+    but = $(header).find("button")
 
+    if(id !== undefined){
+        $(but).click(function(){
+            startnode(id);
+        });
+    }else{
+        $(but).hide();
+    }
+
+    return header;
+}
+
+var builddetails = function(hashmap){
+    headings = []
+    values = []
+    for (var heading in hashmap){
+        headings.push(heading)
+        values.push(hashmap[heading])
+    }
+    return ich.nodedetails({"headings":headings, "values":values});
+}
+
+var buildarticle = function(nodeid, commentid, title, text, editrefresh, titleclick){
+    article = ich.articletemplate({"ArticleTitle":title, "ArticleBody":marked(text)});
+
+    $(article).find(".editbutton").click(function(evt){
+        showeditor(nodeid, commentid, text, editrefresh);
+        evt.stopPropagation();
+    });
+
+    if(titleclick !== undefined){
+        $(article).find(".articletitle").click(function(evt){
+            titleclick();
+            evt.stopPropagation();
+        });
+    }
+    return article;
+}
+
+
+var showeditor = function(nodeid, commentid, text, editrefresh){
+    $('#editmodalcontainer').html(ich.modaltemplate({Text:text}));
+    editor = new Editor();
+    editor.render();
+
+    $('#commenteditor').on('shown.bs.modal', function (e) {
+        editor.codemirror.refresh();
+    });
+
+    $('#commenteditor').find("button").click(function(){
+        editorsave(nodeid, commentid, editor.codemirror.getValue());
+        $('#commenteditor').modal('hide');
+    });
+
+
+    $('#commenteditor').on('hidden.bs.modal', function (e) {
+        $('#editmodalcontainer').children().remove();
+        editrefresh();
+    });
+
+    $('#commenteditor').modal();
+}
 
 
 var ALERT_SUCCESS = "alert-success";
@@ -204,12 +204,11 @@ var show_alert = function(alert_type, alert_text){
     $('#alertcontainer').html(ich.alertcontent({"alert_text":alert_text, "alert_type":alert_type}));
 }
 
-
-
 //tags
 $(function(){
-    $('#viewtagbtn').click(function(e){
+    $('#viewtagbtn').click(function(evt){
         show_alert(ALERT_INFO, "Will try to fetch and show the tag details");
-        e.preventDefault();
+        evt.stopPropagation();
     });
 });
+
