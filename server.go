@@ -1,44 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"github.com/cespare/flagconf"
 	"github.com/justinas/alice"
-	"github.com/srinathh/powerdocs/frontend"
 	"github.com/srinathh/powerdocs/fsbackend"
 	"github.com/srinathh/powerdocs/mockbackends"
 	"github.com/srinathh/powerdocs/structs"
 	"log"
 	"net/http"
 )
-
-type Config struct {
-	Http   string `desc:"the IP address and port for the DocsJotter server. Defaults to 127.0.0.1:8989"`
-	Root   string `desc:"which directory to serve"`
-	Resdir string `desc:"path to the DocsJotter resource files. Defaults to html"`
-	Mode   string `desc:"can take values production, fstest or mocktest. In production mode, Root must be speciried. In fstest, root defaults to testdata. MockTest uses a mock backend"`
-}
-
-var config Config
-
-func ParseConfig() error {
-	config = Config{
-		Http:   "127.0.0.1:8989",
-		Root:   "",
-		Resdir: "html",
-		Mode:   "fstest",
-	}
-
-	if err := flagconf.Parse("docsjotter.toml", &config); err != nil {
-		return fmt.Errorf("Could not find docsjotter.toml: %s", err)
-	}
-
-	switch config.Mode {
-	case "fstest":
-		config.Root = "testdata"
-	}
-	return nil
-}
 
 //struct FrontEnd stores references to different http.HandlerFunc that will be bound to routes
 //by the PowerDocs server. This enables easy swapping of FrontEnd handlers in a piecemeal
@@ -54,9 +23,8 @@ type AppHandlers struct {
 }
 
 func main() {
-	if err := ParseConfig(); err != nil {
-		log.Fatalf("Error reading configuration %s:", err)
-	}
+
+	config := LoadConfig("./docsjotter.toml")
 
 	//setup the middleware
 	var apphandlers AppHandlers
@@ -79,7 +47,7 @@ func main() {
 		bk = fsbackend.NewFSBackend([]string{config.Root})
 	}
 
-	f := frontend.NewFrontEndServer(bk)
+	f := NewFrontEndServer(bk)
 
 	//we're doing this rather than just use an interface to enable components to be
 	//swapped out on the fly
