@@ -2,10 +2,11 @@ package mockbackends
 
 import (
 	"fmt"
+	"github.com/mailgun/gocql/uuid"
 	"github.com/srinathh/powerdocs/structs"
-	"math/rand"
-
 	"github.com/srinathh/powerdocs/utils"
+
+	"log"
 	"sync"
 	"time"
 )
@@ -20,21 +21,29 @@ func (f *FakeBackend) EditComment(id, commentid, text string) error {
 	f.Locker.Lock()
 	defer f.Locker.Unlock()
 
+	log.Printf("Req nodeid: %s   commentid:%s", id, commentid)
+	/*
+		for k, v := range f.Nodes {
+			for _, c := range v.Comments {
+				log.Printf("Req nodeid: %s   commentid:%s", k, c.Id)
+			}
+		}
+	*/
 	val, ok := f.Nodes[id]
 	if !ok {
 		return fmt.Errorf("FakeBackend.EditComment - Node requested %s not found", id)
 	}
 	var c structs.Comment
-	c.ModTime = time.Now().Format(time.Stamp)
+	c.ModTime = time.Now().Format(utils.MyTimeStamp)
 	c.Text = text
 
 	if c.Id == "CREATE" {
-		c.Id = utils.DoHash(fmt.Sprintf("%s%d", c.Text, time.Now().UnixNano()))
+		c.Id = uuid.RandomUUID().String()
 		val.Comments = append([]structs.Comment{c}, val.Comments...)
 		f.Nodes[id] = val
 		return nil
 	}
-
+	log.Println(val)
 	for i, com := range val.Comments {
 		if c.Id == com.Id {
 			val.Comments[i] = c
@@ -79,7 +88,6 @@ func (f *FakeBackend) StartNode(id string) error {
 
 func NewFakeBackend() *FakeBackend {
 
-	rand.Seed(9)
 	var f FakeBackend
 	f.Locker.Lock()
 	f.Nodes = GetTestCases()

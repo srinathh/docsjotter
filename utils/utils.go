@@ -11,6 +11,8 @@ import (
 	"runtime"
 )
 
+const MyTimeStamp string = "Jan _2 2006, _3:04 pm"
+
 func DoHash(s string) string {
 	hasher := fnv.New64()
 	hasher.Write([]byte(s))

@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"time"
 )
 
 //a slice of type JSTreeNode represents the data structure that is sent to JSTree
@@ -34,15 +35,15 @@ type Node struct {
 	Parent   string
 	Name     string
 	Type     string
-	ModTime  string
-	Size     string
-	Comments []Comment
+	ModTime  time.Time
+	Size     int64
+	Comments map[string]Comment
 }
 
 type Comment struct {
 	Id      string
 	Text    string
-	ModTime string
+	ModTime time.Time
 }
 
 func (n Node) ServeHTTP(w http.ResponseWriter, r *http.Request) {
