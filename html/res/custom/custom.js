@@ -208,7 +208,19 @@ var show_alert = function(alert_type, alert_text){
 $(function(){
     $('#viewtagbtn').click(function(evt){
         show_alert(ALERT_INFO, "Will try to fetch and show the tag details");
-        evt.stopPropagation();
+        evt.preventDefault();
     });
 });
 
+//shutdown
+$(function(){
+    $('#shutdownbtn').click(function(evt){
+        $.ajax({
+            url: "/shutdown",
+            success: function(){
+                show_alert(ALERT_DANGER,'Server has been successfully shut down')
+            } ,
+        });
+        evt.preventDefault();
+    });
+});

@@ -1,0 +1,41 @@
+Client facing structures and functions
+======================================
+
+JSTreeNode
+----------
+- id
+- parent
+- text
+- type
+
+### Modifications required
+- need to develop a sort function for JSTree that arranges folders alphabetically first and then files
+- do we need extra metadata to sort by size etc? May be too much?
+- need a way to communicate/notify JSTree to reload data on FSNotify change
+
+Node
+----
+- ID
+- Name
+- Size
+- Type
+- ModTime
+- Comments - currently list of comments, move to map?
+
+Comment
+-------
+- Id
+- ModTime
+- Text
+
+### Modifications required
+- List of all tags mentioned in all comments for the post. Comments filterable by tags.
+- Comments should be sortable by last modified date
+- 1 UUID for comment vs. having to keep track of 2 IDs
+
+Tag
+---
+- Name
+- Comments
+  
+
