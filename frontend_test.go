@@ -2,8 +2,8 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/srinathh/powerdocs/mockbackends"
-	"github.com/srinathh/powerdocs/structs"
+	"github.com/srinathh/docsjotter/mockbackends"
+	"github.com/srinathh/docsjotter/structs"
 	"net/http"
 	"net/http/httptest"
 	"net/url"

@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/justinas/alice"
-	"github.com/srinathh/powerdocs/fsbackend"
-	"github.com/srinathh/powerdocs/mockbackends"
-	"github.com/srinathh/powerdocs/structs"
+	"github.com/srinathh/docsjotter/fsbackend"
+	"github.com/srinathh/docsjotter/mockbackends"
+	"github.com/srinathh/docsjotter/structs"
 	"github.com/stretchr/graceful"
 	"log"
 	"net/http"

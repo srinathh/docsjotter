@@ -3,8 +3,8 @@ package fsbackend
 import (
 	"fmt"
 	"github.com/srinathh/byten"
-	"github.com/srinathh/powerdocs/structs"
-	"github.com/srinathh/powerdocs/utils"
+	"github.com/srinathh/docsjotter/structs"
+	"github.com/srinathh/docsjotter/utils"
 	"log"
 	"os"
 	"path/filepath"
@@ -24,7 +24,7 @@ type FSBackend struct {
 	fsnodes map[string]FSNode //we will store the path to a directory structure
 }
 
-const COMMENTSUFFIX string = ".powerdocs.json"
+const COMMENTSUFFIX string = ".docsjotter.json"
 
 func NewFSBackend(roots []string) *FSBackend {
 	var f FSBackend
@@ -204,7 +204,7 @@ func (f *FSBackend) populate() {
 
 			//tk add logic to skip hidden files in dirs
 
-			//skip files which powerdocs stores comments in. They will be checked on the fly
+			//skip files which docsjotter stores comments in. They will be checked on the fly
 			if strings.HasSuffix(filepath.Base(path), COMMENTSUFFIX) {
 				return nil
 			}

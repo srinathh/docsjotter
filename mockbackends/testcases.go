@@ -2,8 +2,8 @@ package mockbackends
 
 import (
 	"github.com/mailgun/gocql/uuid"
-	"github.com/srinathh/powerdocs/structs"
-	"github.com/srinathh/powerdocs/utils"
+	"github.com/srinathh/docsjotter/structs"
+	"github.com/srinathh/docsjotter/utils"
 	"path/filepath"
 	"regexp"
 	"time"

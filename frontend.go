@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/srinathh/powerdocs/structs"
+	"github.com/srinathh/docsjotter/structs"
 	"log"
 	"net/http"
 )

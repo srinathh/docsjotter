@@ -3,8 +3,8 @@ package mockbackends
 import (
 	"fmt"
 	"github.com/mailgun/gocql/uuid"
-	"github.com/srinathh/powerdocs/structs"
-	"github.com/srinathh/powerdocs/utils"
+	"github.com/srinathh/docsjotter/structs"
+	"github.com/srinathh/docsjotter/utils"
 
 	"log"
 	"sync"
