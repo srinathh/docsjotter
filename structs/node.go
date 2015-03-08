@@ -42,7 +42,7 @@ type Node struct {
 
 type Comment struct {
 	Id      string
-	Text    string
+	Text    string `modifier:"multiline_string"`
 	ModTime string
 }
 
