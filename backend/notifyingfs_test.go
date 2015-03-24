@@ -1,4 +1,4 @@
-package rwvfsnotify
+package notifyingvfs
 
 import (
 	"gopkg.in/fsnotify.v1"
