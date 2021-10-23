@@ -48,6 +48,7 @@ func (osfs *OsFs) Watch(path string, c chan<- notify.EventInfo, events ...notify
 
 func (osfs *OsFs) Stop(c chan<- notify.EventInfo) {
 	return notify.Stop(c)
+
 }
 
 /*
